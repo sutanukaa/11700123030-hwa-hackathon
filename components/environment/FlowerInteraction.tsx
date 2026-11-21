@@ -49,7 +49,7 @@ const FLOWER_BUSHES: FlowerBush[] = [
   {
     id: 'bush-right-corner',
     assetKey: 'flower3',
-    label: 'Right Corner Daisy (Summons Droplet Rain)',
+    label: 'Right Corner Daisy (Summons Heavy Spring Rain)',
     x: 92, // Right Corner
     bottomOffset: -6,
     effect: 'droplet_rain',
@@ -68,15 +68,15 @@ const BREEZE_PETALS = Array.from({ length: 38 }, (_, i) => ({
   driftX: 180 + (i % 6) * 90,
   driftY: 960 + (i % 5) * 110,
   rotate: 240 + i * 50,
-  width: 22 + (i % 4) * 3, // Elongated proportions (not square/circular)
+  width: 22 + (i % 4) * 3,
   height: 30 + (i % 4) * 4,
   delay: (i % 10) * 0.08,
   duration: 3.3 + (i % 4) * 0.35,
 }))
 
-// 27 radiant sunbeam shafts fanning out in ALL directions from the off-screen sun origin
+// 27 radiant sunbeam shafts fanning out in ALL directions from off-screen sun origin
 const SUNRAYS = Array.from({ length: 27 }, (_, i) => {
-  const angle = -84 + i * 6.5 // Fanning across -84° to +84°
+  const angle = -84 + i * 6.5
   const isMajor = i % 2 === 0
   return {
     id: i,
@@ -87,7 +87,7 @@ const SUNRAYS = Array.from({ length: 27 }, (_, i) => {
   }
 })
 
-// 24 floating golden sun motes dancing across the screen
+// 24 floating golden sun motes
 const SUN_MOTES = Array.from({ length: 24 }, (_, i) => ({
   id: i,
   left: `${(i * 13.7) % 90 + 5}%`,
@@ -98,16 +98,29 @@ const SUN_MOTES = Array.from({ length: 24 }, (_, i) => ({
   duration: 2.2 + (i % 3) * 0.4,
 }))
 
-// 48 crystal spring raindrops (Droplet Rain)
-const CRYSTAL_DROPS = Array.from({ length: 48 }, (_, i) => ({
+// 110 DENSE, HEAVY SPRING RAINDROPS (High velocity, layered depths, wind slant)
+const HEAVY_RAINDROPS = Array.from({ length: 110 }, (_, i) => {
+  const isForeground = i % 3 === 0
+  return {
+    id: i,
+    startX: `${(i * 3.4) % 104 - 2}%`,
+    startY: `${-20 - (i % 11) * 8}%`,
+    fallDist: 1100 + (i % 7) * 90,
+    windSlant: -32 - (i % 4) * 8, // Realistic wind slant
+    height: isForeground ? 44 + (i % 5) * 16 : 28 + (i % 4) * 10,
+    width: isForeground ? 2.6 : 1.7,
+    opacity: isForeground ? 0.95 : 0.7,
+    delay: (i % 20) * 0.045, // Rapid continuous shower
+    duration: isForeground ? 0.85 + (i % 4) * 0.1 : 1.05 + (i % 4) * 0.12,
+  }
+})
+
+// 16 ground splash ripples where heavy rain strikes the meadow
+const RAIN_SPLASHES = Array.from({ length: 16 }, (_, i) => ({
   id: i,
-  startX: `${(i * 8.7) % 96 + 2}%`,
-  startY: `${-15 - (i % 7) * 7}%`,
-  fallDist: 1050 + (i % 6) * 90,
-  height: 24 + (i % 5) * 14,
-  width: 2.2,
-  delay: (i % 12) * 0.07,
-  duration: 1.3 + (i % 4) * 0.2,
+  left: `${(i * 6.3 + 3) % 94}%`,
+  bottom: `${2 + (i % 5) * 4}%`,
+  delay: 0.35 + (i % 8) * 0.14,
 }))
 
 export function FlowerInteraction() {
@@ -118,7 +131,6 @@ export function FlowerInteraction() {
 
   const handleBushClick = useCallback(
     (bush: FlowerBush) => {
-      // Mark as bloomed
       setBloomedIds((prev) => {
         const next = new Set(prev)
         next.add(bush.id)
@@ -127,7 +139,6 @@ export function FlowerInteraction() {
 
       if (reducedMotion) return
 
-      // Trigger full-screen atmospheric effect
       setActiveEffect(bush.effect)
       setEffectCounter((c) => c + 1)
 
@@ -151,7 +162,6 @@ export function FlowerInteraction() {
             aria-hidden="true"
             style={{ perspective: 900 }}
           >
-            {/* Soft spring atmosphere blush sheen */}
             <div className="absolute inset-0 bg-[rgba(255,225,232,0.16)]" />
 
             {BREEZE_PETALS.map((p) => (
@@ -183,7 +193,6 @@ export function FlowerInteraction() {
                 className="absolute flex items-center justify-center origin-center"
                 style={{ width: p.width, height: p.height }}
               >
-                {/* Authentic Cherry Blossom Petal Silhouette & Texture */}
                 <svg
                   viewBox="0 0 100 130"
                   className="h-full w-full drop-shadow-[0_2px_4px_rgba(200,85,115,0.35)]"
@@ -216,27 +225,20 @@ export function FlowerInteraction() {
                     </linearGradient>
                   </defs>
 
-                  {/* Iconic Cleft-Notched Sakura Petal Outline */}
                   <path
                     d="M 50 124 C 36 100 14 74 14 42 C 14 20 28 10 44 14 C 47 15 49 19 50 22 C 51 19 53 15 56 14 C 72 10 86 20 86 42 C 86 74 64 100 50 124 Z"
                     fill={`url(#sakuraGrad-${p.id})`}
                   />
-
-                  {/* Translucent Lobe Highlight Sheen */}
                   <path
                     d="M 50 124 C 36 100 14 74 14 42 C 14 20 28 10 44 14 C 47 15 49 19 50 22 Q 48 70 50 124 Z"
                     fill={`url(#sakuraSheen-${p.id})`}
                   />
-
-                  {/* Subtle Center Petal Fold / Vein Spine */}
                   <path
                     d="M 50 22 Q 49 70 50 124"
                     stroke="rgba(220, 80, 110, 0.35)"
                     strokeWidth="1.2"
                     strokeLinecap="round"
                   />
-
-                  {/* Translucent Delicate Veinlets */}
                   <path
                     d="M 49 55 Q 35 45 28 40 M 49 75 Q 36 68 25 65 M 50 55 Q 65 45 72 40 M 50 75 Q 64 68 75 65"
                     stroke="rgba(255, 255, 255, 0.45)"
@@ -260,7 +262,6 @@ export function FlowerInteraction() {
             className="pointer-events-none fixed inset-0 z-[65] overflow-hidden"
             aria-hidden="true"
           >
-            {/* Full-Screen Soft Golden Sky Warmth */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 0.65, 0.75, 0.4, 0] }}
@@ -268,9 +269,7 @@ export function FlowerInteraction() {
               className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,236,170,0.38)_0%,rgba(245,217,142,0.15)_50%,transparent_85%)]"
             />
 
-            {/* Sun Origin Moved OFF-SCREEN Above Top Edge (top: -140px, left: 50%) */}
             <div className="absolute -top-[140px] left-1/2 -translate-x-1/2 flex items-center justify-center">
-              {/* Radiating Sunbeam Shafts Streaming Down Across Entire Viewport */}
               <motion.div
                 initial={{ scaleY: 0.2, opacity: 0 }}
                 animate={{
@@ -297,7 +296,6 @@ export function FlowerInteraction() {
               </motion.div>
             </div>
 
-            {/* Shimmering Sun Motes Dancing in the Downward Sunrays */}
             {SUN_MOTES.map((m) => (
               <motion.div
                 key={m.id}
@@ -326,7 +324,7 @@ export function FlowerInteraction() {
       </AnimatePresence>
 
       {/* =====================================================================
-          3. DROPLET RAIN (Full-Screen Spring Crystal Dewdrop Shower)
+          3. HEAVY DROPLET RAIN (110 Dense Crystals, Wind Slant, Splashes)
           ===================================================================== */}
       <AnimatePresence mode="wait">
         {activeEffect === 'droplet_rain' && !reducedMotion && (
@@ -335,26 +333,29 @@ export function FlowerInteraction() {
             className="pointer-events-none fixed inset-0 z-[65] overflow-hidden"
             aria-hidden="true"
           >
-            {/* Refreshing Cool Mist Sheen */}
+            {/* Immersive Cool Rain Atmosphere Sheen */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.45, 0] }}
-              transition={{ duration: 3.5, ease: 'easeInOut' }}
-              className="absolute inset-0 bg-[rgba(185,211,230,0.12)] backdrop-blur-[0.5px]"
+              animate={{ opacity: [0, 0.55, 0.65, 0.4, 0] }}
+              transition={{ duration: 3.8, ease: 'easeInOut' }}
+              className="absolute inset-0 bg-[rgba(165,195,225,0.18)] backdrop-blur-[0.5px]"
             />
 
-            {CRYSTAL_DROPS.map((r) => (
+            {/* 110 Rapid Cascading Raindrops */}
+            {HEAVY_RAINDROPS.map((r) => (
               <motion.div
                 key={r.id}
                 initial={{
                   left: r.startX,
                   top: r.startY,
                   opacity: 0,
+                  x: 0,
                   y: 0,
                 }}
                 animate={{
+                  x: r.windSlant,
                   y: r.fallDist,
-                  opacity: [0, 0.9, 0.8, 0],
+                  opacity: [0, r.opacity, r.opacity, 0],
                 }}
                 transition={{
                   duration: r.duration,
@@ -366,10 +367,30 @@ export function FlowerInteraction() {
                   width: r.width,
                   height: r.height,
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(200,230,255,0.7) 70%, transparent 100%)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(210,235,255,0.85) 60%, transparent 100%)',
                   boxShadow:
-                    '0 0 6px rgba(255,255,255,0.85), 0 0 10px rgba(185,211,230,0.6)',
+                    '0 0 6px rgba(255,255,255,0.9), 0 0 12px rgba(180,215,240,0.7)',
                 }}
+              />
+            ))}
+
+            {/* Ground Splash Ripples */}
+            {RAIN_SPLASHES.map((s) => (
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, scale: 0.2 }}
+                animate={{
+                  opacity: [0, 0.75, 0],
+                  scale: [0.2, 1.8],
+                }}
+                transition={{
+                  duration: 0.55,
+                  delay: s.delay,
+                  repeat: 3,
+                  ease: 'easeOut',
+                }}
+                className="absolute h-2 w-8 rounded-full border border-white/60 bg-white/20"
+                style={{ left: s.left, bottom: s.bottom }}
               />
             ))}
           </div>
@@ -396,7 +417,6 @@ export function FlowerInteraction() {
               }}
               className="pointer-events-none absolute -translate-x-1/2 origin-bottom"
             >
-              {/* Touch & Click Target Button */}
               <button
                 type="button"
                 onPointerDown={(e) => {
@@ -414,7 +434,6 @@ export function FlowerInteraction() {
                 className="group pointer-events-auto relative flex cursor-pointer items-end justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E]"
                 aria-label={`${bush.label} (${isBloomed ? 'bloomed' : 'click to interact'})`}
               >
-                {/* Natural Ground Sway */}
                 <motion.div
                   animate={
                     reducedMotion
@@ -434,7 +453,6 @@ export function FlowerInteraction() {
                   }}
                   className="relative flex items-end justify-center origin-bottom"
                 >
-                  {/* Restrained Bouquet Artwork */}
                   <motion.div
                     initial={false}
                     animate={

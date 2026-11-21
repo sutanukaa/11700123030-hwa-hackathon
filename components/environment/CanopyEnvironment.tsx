@@ -18,6 +18,7 @@ import {
 import { canopyAssets } from '@/lib/assets'
 import { useCanopyStore } from '@/state/canopy-store'
 import { ButterflyInteraction } from './ButterflyInteraction'
+import { DandelionInteraction } from './DandelionInteraction'
 import { EnvironmentAtmosphere } from './EnvironmentAtmosphere'
 import { EnvironmentLayer } from './EnvironmentLayer'
 import { EnvironmentLighting } from './EnvironmentLighting'
@@ -312,9 +313,10 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3.2: FLOWER BLOOMING INTERACTION (Meadow Interaction Plane)
+            LAYER 3.2: FLOWER & DANDELION INTERACTIONS (Meadow Interaction Plane)
             ========================================================================= */}
         {mode === 'explore' && <FlowerInteraction />}
+        {mode === 'explore' && <DandelionInteraction />}
 
         {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE

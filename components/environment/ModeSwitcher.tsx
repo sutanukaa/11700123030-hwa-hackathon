@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'framer-motion'
-import { Sparkles, Flower2, HelpCircle } from 'lucide-react'
+import { Compass, Moon, HelpCircle } from 'lucide-react'
 import { useRef, useEffect } from 'react'
 import { useCanopyStore } from '@/state/canopy-store'
 
@@ -26,35 +26,35 @@ export function ModeSwitcher() {
       initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reducedMotion ? 0.05 : 0.35, delay: 0.15 }}
-      className="pointer-events-auto absolute right-4 top-4 z-[70] flex items-center gap-1 rounded-full border border-[#E8DED2]/90 bg-[#FFF8EF]/90 p-1.5 shadow-sm backdrop-blur-md sm:right-6 sm:top-6"
+      className="pointer-events-auto absolute right-4 top-4 z-[70] flex items-center gap-1 rounded-full border-2 border-white/50 bg-[#82C2E5] p-1.5 shadow-lg sm:right-6 sm:top-6"
       aria-label="Environmental mood selector"
     >
       <button
         ref={switcherRef}
         type="button"
         onClick={() => setMode('explore')}
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E] ${
+        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold [font-family:var(--font-fredoka)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
           mode === 'explore'
-            ? 'bg-[#F5D98E] text-[#51443E] font-semibold shadow-xs'
-            : 'text-[#897C72] hover:bg-[#FFFEFA] hover:text-[#51443E]'
+            ? 'bg-white text-[#5293B8] shadow-sm'
+            : 'text-white hover:bg-white/20'
         }`}
         aria-pressed={mode === 'explore'}
       >
-        <Sparkles className="h-3.5 w-3.5" />
+        <Compass className="h-3.5 w-3.5 stroke-[2.2]" />
         <span>Explore</span>
       </button>
 
       <button
         type="button"
         onClick={() => setMode('unwind')}
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#B8CBB0] ${
+        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold [font-family:var(--font-fredoka)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white ${
           mode === 'unwind'
-            ? 'bg-[#B8CBB0] text-[#51443E] font-semibold shadow-xs'
-            : 'text-[#897C72] hover:bg-[#FFFEFA] hover:text-[#51443E]'
+            ? 'bg-white text-[#5293B8] shadow-sm'
+            : 'text-white hover:bg-white/20'
         }`}
         aria-pressed={mode === 'unwind'}
       >
-        <Flower2 className="h-3.5 w-3.5" />
+        <Moon className="h-3.5 w-3.5 stroke-[2.2]" />
         <span>Unwind</span>
       </button>
 
@@ -62,7 +62,7 @@ export function ModeSwitcher() {
         type="button"
         onClick={() => setMode('idle')}
         title="Re-open mood question"
-        className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-[#897C72] transition-colors hover:bg-[#FFFEFA] hover:text-[#51443E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#51443E]"
+        className="ml-0.5 flex h-6 w-6 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         aria-label="Change mood question"
       >
         <HelpCircle className="h-3.5 w-3.5" />

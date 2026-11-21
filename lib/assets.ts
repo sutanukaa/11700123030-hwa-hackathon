@@ -18,6 +18,66 @@ export interface AssetEntry {
 }
 
 export const canopyAssets: Record<string, AssetEntry> = {
+  ladybugIdle: {
+    src: '/ladybug-idle.png',
+    alt: 'Ladybug resting naturally on meadow leaf',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  ladybugCrawl: {
+    src: '/ladybug-crawl.png',
+    alt: 'Ladybug preparing wings on meadow leaf',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  ladybugFly: {
+    src: '/ladybug-fly.png',
+    alt: 'Ladybug in flight with open wings',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  emptyLeaf: {
+    src: '/empty-leaf.png',
+    alt: 'Empty meadow leaf after ladybug departure',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitPeek: {
+    src: '/rabbit-peek.png',
+    alt: 'Shy meadow rabbit peeking',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitAlert: {
+    src: '/rabbit-alert.png',
+    alt: 'Shy meadow rabbit alert',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitSit: {
+    src: '/rabbit-sit.png',
+    alt: 'Shy meadow rabbit sitting',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitHop1: {
+    src: '/rabbit-hop-1.png',
+    alt: 'Shy meadow rabbit hopping',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitHop2: {
+    src: '/rabbit-hop-2.png',
+    alt: 'Shy meadow rabbit landing',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  rabbitHide: {
+    src: '/rabbit-hide.png',
+    alt: 'Shy meadow rabbit hiding',
+    category: 'environment',
+    transparentBackground: true,
+  },
   butterfly1: {
     src: '/butterfly-1.png',
     alt: 'Butterfly illustration',

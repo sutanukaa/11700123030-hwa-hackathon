@@ -17,12 +17,14 @@ import {
 } from 'react'
 import { canopyAssets } from '@/lib/assets'
 import { useCanopyStore } from '@/state/canopy-store'
+import { BunnyInteraction } from './BunnyInteraction'
 import { ButterflyInteraction } from './ButterflyInteraction'
 import { DandelionInteraction } from './DandelionInteraction'
 import { EnvironmentAtmosphere } from './EnvironmentAtmosphere'
 import { EnvironmentLayer } from './EnvironmentLayer'
 import { EnvironmentLighting } from './EnvironmentLighting'
 import { FlowerInteraction } from './FlowerInteraction'
+import { LadybugInteraction } from './LadybugInteraction'
 import { ModeInvitation } from './ModeInvitation'
 import { ModeSwitcher } from './ModeSwitcher'
 import { ScrollCue } from './ScrollCue'
@@ -97,48 +99,43 @@ export function CanopyEnvironment() {
   // =========================================================================
 
   // Stage A: Mountains & Rolling Hills
-  const mountainScale = useTransform(scrollYProgress, [0, 0.4], [1.06, 1.05])
-  const hillsOpacity = useTransform(scrollYProgress, [0.04, 0.32], [0, 1])
-  const hillsY = useTransform(scrollYProgress, [0.04, 0.32], [35, 0])
+  const mountainsOpacity = useTransform(scrollYProgress, [0.0, 0.24], [0.15, 1.0])
+  const hillsY = useTransform(scrollYProgress, [0.0, 0.3], [48, 0])
+  const hillsOpacity = useTransform(scrollYProgress, [0.0, 0.3], [0, 1])
 
-  // Stage B: Meadow Ground Floor
-  const meadowOpacity = useTransform(scrollYProgress, [0.22, 0.55], [0, 1])
-  const meadowY = useTransform(scrollYProgress, [0.22, 0.55], [45, 0])
+  // Stage B: Meadow Ground & Trunk
+  const meadowY = useTransform(scrollYProgress, [0.24, 0.58], [72, 0])
+  const meadowOpacity = useTransform(scrollYProgress, [0.24, 0.58], [0, 1])
 
-  // Stage C: Cherry Blossom Tree (Enters from top-left)
-  const treeOpacity = useTransform(scrollYProgress, [0.42, 0.78], [0, 1])
-  const treeX = useTransform(scrollYProgress, [0.42, 0.78], [-35, 0])
-  const treeY = useTransform(scrollYProgress, [0.42, 0.78], [-25, 0])
+  // Stage C: Cherry Blossom Tree (Lateral slide from left + vertical rise)
+  const treeX = useTransform(scrollYProgress, [0.46, 0.84], [-64, 0])
+  const treeY = useTransform(scrollYProgress, [0.46, 0.84], [56, 0])
+  const treeOpacity = useTransform(scrollYProgress, [0.46, 0.84], [0, 1])
 
-  // Stage C: Foreground Bushes (Enters from bottom)
-  const bushesOpacity = useTransform(scrollYProgress, [0.52, 0.82], [0, 1])
-  const bushesY = useTransform(scrollYProgress, [0.52, 0.82], [50, 0])
+  // Stage D: Foreground Framing Bushes
+  const bushesY = useTransform(scrollYProgress, [0.68, 0.94], [80, 0])
+  const bushesOpacity = useTransform(scrollYProgress, [0.68, 0.94], [0, 1])
 
   // =========================================================================
-  // MOUSE-BASED POINTER PARALLAX (Active depth within 36px ceiling)
+  // PARALLAX COEFFICIENTS (Ceiling: 36px)
   // =========================================================================
-  const modeMultiplier =
-    mode === 'unwind' ? 0.65 : mode === 'explore' ? 1.15 : 1.0
-
-  const mountainParallax = getParallaxValue(5, modeMultiplier, reducedMotion)
-  const hillsParallax = getParallaxValue(10, modeMultiplier, reducedMotion)
-  const meadowParallax = getParallaxValue(16, modeMultiplier, reducedMotion)
-  const treeParallax = getParallaxValue(24, modeMultiplier, reducedMotion)
-  const bushesParallax = getParallaxValue(31, modeMultiplier, reducedMotion)
+  const mountainsParallax = getParallaxValue(4, 1.0, reducedMotion)
+  const hillsParallax = getParallaxValue(8, 1.0, reducedMotion)
+  const meadowParallax = getParallaxValue(14, 1.0, reducedMotion)
+  const treeParallax = getParallaxValue(20, 1.0, reducedMotion)
+  const bushesParallax = getParallaxValue(28, 1.0, reducedMotion)
 
   const handlePointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      // Discard touch events and respect user reduced-motion preference
-      if (reducedMotion || event.pointerType !== 'mouse') return
-
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (reducedMotion) return
       const bounds = event.currentTarget.getBoundingClientRect()
-      const normalizedX =
-        ((event.clientX - bounds.left) / bounds.width - 0.5) * 2
-      const normalizedY =
-        ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
+      if (!bounds.width || !bounds.height) return
 
-      pointerX.set(clamp(normalizedX))
-      pointerY.set(clamp(normalizedY))
+      const normalizedX = clamp(((event.clientX - bounds.left) / bounds.width) * 2 - 1)
+      const normalizedY = clamp(((event.clientY - bounds.top) / bounds.height) * 2 - 1)
+
+      pointerX.set(normalizedX)
+      pointerY.set(normalizedY)
     },
     [pointerX, pointerY, reducedMotion],
   )
@@ -151,96 +148,39 @@ export function CanopyEnvironment() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full"
-      style={{ height: reducedMotion ? '100svh' : '360vh' }}
+      className="relative h-[480vh] w-full bg-[#1b2b23]"
     >
       <section
+        aria-label="CANOPY Interactive Landscape"
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
-        className="sticky top-0 h-[100svh] w-full overflow-hidden bg-[#B9D3E6] select-none"
-        aria-label="CANOPY Interactive Garden Environment"
+        className="sticky top-0 h-screen w-full overflow-hidden select-none bg-[#7cb8d0]"
       >
         {/* =========================================================================
-            LAYER 1: SKY & ATMOSPHERE BACKPLATE
-            ========================================================================= */}
-        {/* Mobile Viewport */}
-        <div className="absolute inset-0 z-0 h-full w-full block md:hidden pointer-events-none">
-          <EnvironmentLayer
-            src={canopyAssets.skyAtmosphereMobile.src}
-            alt="CANOPY Sky and Atmosphere"
-            pointerX={pointerX}
-            pointerY={pointerY}
-            parallaxStrength={0}
-            sizes="100vw"
-            priority
-            objectPosition="center top"
-            imageClassName="scale-105 object-cover"
-          />
-        </div>
-        {/* Desktop Viewport */}
-        <div className="absolute inset-0 z-0 h-full w-full hidden md:block pointer-events-none">
-          <EnvironmentLayer
-            src={canopyAssets.skyAtmosphere.src}
-            alt="CANOPY Sky and Atmosphere"
-            pointerX={pointerX}
-            pointerY={pointerY}
-            parallaxStrength={0}
-            sizes="100vw"
-            priority
-            objectPosition="center top"
-            imageClassName="scale-105 object-cover"
-          />
-        </div>
-
-        {/* =========================================================================
-            LAYER 1.5: MOUNTAIN RANGE
+            LAYER 1: SKY & MOUNTAIN RANGE (Backdrop Base)
             ========================================================================= */}
         <motion.div
-          className="absolute inset-0 z-5 h-full w-full pointer-events-none"
-          style={reducedMotion ? {} : { scale: mountainScale }}
+          className="absolute inset-0 z-0 h-full w-full pointer-events-none"
+          style={reducedMotion ? {} : { opacity: mountainsOpacity }}
         >
           <EnvironmentLayer
             src={canopyAssets.mountainRange.src}
-            alt="Distant Mountains"
+            alt=""
             pointerX={pointerX}
             pointerY={pointerY}
-            parallaxStrength={mountainParallax}
+            parallaxStrength={mountainsParallax}
             sizes="100vw"
             priority
-            objectPosition="center bottom"
+            objectPosition="center top"
             imageClassName="scale-105 object-cover"
           />
         </motion.div>
 
         {/* =========================================================================
-            LAYER 2: ROLLING HILLS (Midground)
+            LAYER 2: ROLLING HILLS (Middle Distance)
             ========================================================================= */}
-        {/* Mobile Viewport */}
         <motion.div
-          className="absolute inset-0 z-10 h-full w-full block md:hidden pointer-events-none"
-          style={
-            reducedMotion
-              ? {}
-              : {
-                  opacity: hillsOpacity,
-                  y: hillsY,
-                }
-          }
-        >
-          <EnvironmentLayer
-            src={canopyAssets.rollingHillsMobile.src}
-            alt=""
-            pointerX={pointerX}
-            pointerY={pointerY}
-            parallaxStrength={hillsParallax}
-            sizes="100vw"
-            objectPosition="center bottom"
-            imageClassName="scale-105 object-cover"
-          />
-        </motion.div>
-        {/* Desktop Viewport */}
-        <motion.div
-          className="absolute inset-0 z-10 h-full w-full hidden md:block pointer-events-none"
+          className="absolute inset-0 z-10 h-full w-full pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -257,40 +197,16 @@ export function CanopyEnvironment() {
             pointerY={pointerY}
             parallaxStrength={hillsParallax}
             sizes="100vw"
-            objectPosition="center bottom"
+            objectPosition="center center"
             imageClassName="scale-105 object-cover"
           />
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3: MEADOW GROUND (Floor Interaction Plane)
+            LAYER 3: MEADOW GROUND (Midground Anchor)
             ========================================================================= */}
-        {/* Mobile Viewport */}
         <motion.div
-          className="absolute inset-0 z-20 h-full w-full block md:hidden pointer-events-none"
-          style={
-            reducedMotion
-              ? {}
-              : {
-                  opacity: meadowOpacity,
-                  y: meadowY,
-                }
-          }
-        >
-          <EnvironmentLayer
-            src={canopyAssets.meadowGroundMobile.src}
-            alt=""
-            pointerX={pointerX}
-            pointerY={pointerY}
-            parallaxStrength={meadowParallax}
-            sizes="100vw"
-            objectPosition="center bottom"
-            imageClassName="scale-105 object-cover"
-          />
-        </motion.div>
-        {/* Desktop Viewport */}
-        <motion.div
-          className="absolute inset-0 z-20 h-full w-full hidden md:block pointer-events-none"
+          className="absolute inset-0 z-20 h-full w-full pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -313,10 +229,12 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3.2: FLOWER & DANDELION INTERACTIONS (Meadow Interaction Plane)
+            LAYER 3.2: FLOWER, DANDELION, BUNNY & LADYBUG INTERACTIONS (Meadow Interaction Plane)
             ========================================================================= */}
         {mode === 'explore' && <FlowerInteraction />}
         {mode === 'explore' && <DandelionInteraction />}
+        {mode === 'explore' && <BunnyInteraction />}
+        {mode === 'explore' && <LadybugInteraction />}
 
         {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE

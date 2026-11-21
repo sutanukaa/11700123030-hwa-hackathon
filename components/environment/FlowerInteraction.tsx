@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { canopyAssets } from '@/lib/assets'
+import { playSound } from '@/lib/sounds'
 
 type FlowerEffectType = 'blossom_breeze' | 'sunrays' | 'droplet_rain'
 
@@ -60,13 +61,14 @@ const FLOWER_BUSHES: FlowerBush[] = [
   },
 ]
 
-// 38 authentic notched cherry blossom petals cascading across the whole screen
-const BREEZE_PETALS = Array.from({ length: 38 }, (_, i) => ({
+// 36 cleft-notched authentic sakura petals tumbling across the screen
+const BREEZE_PETALS = Array.from({ length: 36 }, (_, i) => ({
   id: i,
-  startX: `${(i * 9.7) % 96 + 2}%`,
-  startY: `${-12 - (i % 6) * 7}%`,
-  driftX: 180 + (i % 6) * 90,
-  driftY: 960 + (i % 5) * 110,
+  startX: `${(i * 11) % 115 - 15}%`,
+  startY: `${-15 - (i % 6) * 12}%`,
+  driftX: 420 + (i % 5) * 85,
+  driftY: 650 + (i % 7) * 95,
+  scale: 0.75 + (i % 4) * 0.18,
   rotate: 240 + i * 50,
   width: 22 + (i % 4) * 3,
   height: 30 + (i % 4) * 4,
@@ -131,6 +133,9 @@ export function FlowerInteraction() {
 
   const handleBushClick = useCallback(
     (bush: FlowerBush) => {
+      // Play matching synthesized sound effect
+      playSound(bush.effect)
+
       setBloomedIds((prev) => {
         const next = new Set(prev)
         next.add(bush.id)
@@ -170,79 +175,56 @@ export function FlowerInteraction() {
                 initial={{
                   left: p.startX,
                   top: p.startY,
+                  scale: 0.4,
                   opacity: 0,
-                  scale: 0.5,
-                  rotate: 0,
+                  rotateZ: 0,
                   rotateX: 0,
                   rotateY: 0,
                 }}
                 animate={{
                   x: [0, p.driftX * 0.45, p.driftX],
-                  y: [0, p.driftY * 0.55, p.driftY],
-                  opacity: [0, 0.98, 0.92, 0],
-                  scale: [0.65, 1.15, 0.85],
-                  rotate: [0, p.rotate * 0.6, p.rotate],
-                  rotateX: [0, 180, 360],
-                  rotateY: [0, 140, 280],
+                  y: [0, p.driftY * 0.6, p.driftY],
+                  scale: [0.4, p.scale, p.scale * 0.95],
+                  opacity: [0, 0.95, 0.9, 0],
+                  rotateZ: [0, p.rotate * 0.5, p.rotate],
+                  rotateX: [0, 240, 520],
+                  rotateY: [0, 180, 400],
                 }}
                 transition={{
                   duration: p.duration,
                   delay: p.delay,
-                  ease: [0.25, 1, 0.5, 1],
+                  ease: [0.25, 0.85, 0.45, 1],
                 }}
-                className="absolute flex items-center justify-center origin-center"
+                className="absolute flex items-center justify-center"
                 style={{ width: p.width, height: p.height }}
               >
                 <svg
-                  viewBox="0 0 100 130"
-                  className="h-full w-full drop-shadow-[0_2px_4px_rgba(200,85,115,0.35)]"
+                  viewBox="0 0 40 52"
+                  className="h-full w-full drop-shadow-[0_2px_4px_rgba(180,90,110,0.22)] select-none"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <defs>
                     <linearGradient
-                      id={`sakuraGrad-${p.id}`}
+                      id={`sakura-grad-${p.id}`}
                       x1="0%"
                       y1="0%"
                       x2="100%"
                       y2="100%"
                     >
-                      <stop offset="0%" stopColor="#FFF2F6" />
-                      <stop offset="25%" stopColor="#FFC5D3" />
-                      <stop offset="70%" stopColor="#FF94AA" />
-                      <stop offset="100%" stopColor="#E65D7B" />
-                    </linearGradient>
-                    <linearGradient
-                      id={`sakuraSheen-${p.id}`}
-                      x1="0%"
-                      y1="0%"
-                      x2="50%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor="rgba(255,255,255,0.7)" />
-                      <stop offset="50%" stopColor="rgba(255,255,255,0.15)" />
-                      <stop offset="100%" stopColor="transparent" />
+                      <stop offset="0%" stopColor="#FFF2F5" />
+                      <stop offset="45%" stopColor="#FFCCD9" />
+                      <stop offset="100%" stopColor="#F48CA4" />
                     </linearGradient>
                   </defs>
-
                   <path
-                    d="M 50 124 C 36 100 14 74 14 42 C 14 20 28 10 44 14 C 47 15 49 19 50 22 C 51 19 53 15 56 14 C 72 10 86 20 86 42 C 86 74 64 100 50 124 Z"
-                    fill={`url(#sakuraGrad-${p.id})`}
+                    d="M 20 4 C 15 1, 6 7, 7 24 C 8 36, 17 48, 20 50 C 23 48, 32 36, 33 24 C 34 7, 25 1, 20 4 Z"
+                    fill={`url(#sakura-grad-${p.id})`}
                   />
                   <path
-                    d="M 50 124 C 36 100 14 74 14 42 C 14 20 28 10 44 14 C 47 15 49 19 50 22 Q 48 70 50 124 Z"
-                    fill={`url(#sakuraSheen-${p.id})`}
-                  />
-                  <path
-                    d="M 50 22 Q 49 70 50 124"
-                    stroke="rgba(220, 80, 110, 0.35)"
+                    d="M 20 50 C 20 40, 20 28, 20 18"
+                    stroke="rgba(235, 115, 145, 0.35)"
                     strokeWidth="1.2"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M 49 55 Q 35 45 28 40 M 49 75 Q 36 68 25 65 M 50 55 Q 65 45 72 40 M 50 75 Q 64 68 75 65"
-                    stroke="rgba(255, 255, 255, 0.45)"
-                    strokeWidth="0.8"
                     strokeLinecap="round"
                   />
                 </svg>
@@ -324,73 +306,71 @@ export function FlowerInteraction() {
       </AnimatePresence>
 
       {/* =====================================================================
-          3. HEAVY DROPLET RAIN (110 Dense Crystals, Wind Slant, Splashes)
+          3. HEAVY SPRING RAIN (Dense, high-velocity rain shower + splashes)
           ===================================================================== */}
       <AnimatePresence mode="wait">
         {activeEffect === 'droplet_rain' && !reducedMotion && (
           <div
-            key={`droplet-rain-${effectCounter}`}
+            key={`rain-shower-${effectCounter}`}
             className="pointer-events-none fixed inset-0 z-[65] overflow-hidden"
             aria-hidden="true"
           >
-            {/* Immersive Cool Rain Atmosphere Sheen */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.55, 0.65, 0.4, 0] }}
+              animate={{ opacity: [0, 0.35, 0.45, 0.4, 0] }}
               transition={{ duration: 3.8, ease: 'easeInOut' }}
-              className="absolute inset-0 bg-[rgba(165,195,225,0.18)] backdrop-blur-[0.5px]"
+              className="absolute inset-0 bg-gradient-to-b from-[#2B4162]/35 via-[#385F71]/25 to-transparent backdrop-blur-[0.5px]"
             />
 
-            {/* 110 Rapid Cascading Raindrops */}
-            {HEAVY_RAINDROPS.map((r) => (
+            {HEAVY_RAINDROPS.map((d) => (
               <motion.div
-                key={r.id}
+                key={d.id}
                 initial={{
-                  left: r.startX,
-                  top: r.startY,
+                  left: d.startX,
+                  top: d.startY,
                   opacity: 0,
-                  x: 0,
-                  y: 0,
                 }}
                 animate={{
-                  x: r.windSlant,
-                  y: r.fallDist,
-                  opacity: [0, r.opacity, r.opacity, 0],
+                  x: [0, d.windSlant],
+                  y: [0, d.fallDist],
+                  opacity: [0, d.opacity, d.opacity, 0],
                 }}
                 transition={{
-                  duration: r.duration,
-                  delay: r.delay,
+                  duration: d.duration,
+                  delay: d.delay,
+                  repeat: 2,
                   ease: 'linear',
                 }}
-                className="absolute rounded-full"
+                className="absolute origin-top"
                 style={{
-                  width: r.width,
-                  height: r.height,
+                  width: `${d.width}px`,
+                  height: `${d.height}px`,
+                  transform: 'rotate(-7deg)',
                   background:
-                    'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(210,235,255,0.85) 60%, transparent 100%)',
-                  boxShadow:
-                    '0 0 6px rgba(255,255,255,0.9), 0 0 12px rgba(180,215,240,0.7)',
+                    'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(200,230,255,0.7) 60%, transparent 100%)',
+                  boxShadow: '0 0 4px rgba(255,255,255,0.6)',
                 }}
               />
             ))}
 
-            {/* Ground Splash Ripples */}
             {RAIN_SPLASHES.map((s) => (
               <motion.div
                 key={s.id}
-                initial={{ opacity: 0, scale: 0.2 }}
+                initial={{ left: s.left, bottom: s.bottom, scale: 0, opacity: 0 }}
                 animate={{
-                  opacity: [0, 0.75, 0],
-                  scale: [0.2, 1.8],
+                  scale: [0, 1.4, 2.2],
+                  opacity: [0, 0.8, 0],
                 }}
                 transition={{
-                  duration: 0.55,
+                  duration: 0.65,
                   delay: s.delay,
                   repeat: 3,
                   ease: 'easeOut',
                 }}
-                className="absolute h-2 w-8 rounded-full border border-white/60 bg-white/20"
-                style={{ left: s.left, bottom: s.bottom }}
+                className="absolute h-2.5 w-7 rounded-full border border-white/70 bg-white/20"
+                style={{
+                  boxShadow: '0 0 6px rgba(255,255,255,0.8)',
+                }}
               />
             ))}
           </div>
@@ -402,7 +382,7 @@ export function FlowerInteraction() {
           ===================================================================== */}
       <div
         className="pointer-events-none absolute inset-0 z-45 overflow-hidden"
-        aria-label="Foreground flower bouquets interaction plane"
+        aria-label="Meadow flower interaction plane"
       >
         {FLOWER_BUSHES.map((bush) => {
           const isBloomed = bloomedIds.has(bush.id)
@@ -411,28 +391,21 @@ export function FlowerInteraction() {
           return (
             <div
               key={bush.id}
+              className="absolute pointer-events-none"
               style={{
                 left: `${bush.x}%`,
                 bottom: `${bush.bottomOffset}px`,
+                transform: 'translateX(-50%)',
               }}
-              className="pointer-events-none absolute -translate-x-1/2 origin-bottom"
             >
               <button
                 type="button"
-                onPointerDown={(e) => {
-                  e.stopPropagation()
-                  handleBushClick(bush)
-                }}
                 onClick={(e) => {
                   e.stopPropagation()
                   handleBushClick(bush)
                 }}
-                onTouchStart={(e) => {
-                  e.stopPropagation()
-                  handleBushClick(bush)
-                }}
-                className="group pointer-events-auto relative flex cursor-pointer items-end justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E]"
-                aria-label={`${bush.label} (${isBloomed ? 'bloomed' : 'click to interact'})`}
+                className="group pointer-events-auto relative flex cursor-pointer items-end justify-center rounded-full p-1.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E]"
+                aria-label={bush.label}
               >
                 <motion.div
                   animate={
@@ -444,6 +417,7 @@ export function FlowerInteraction() {
                             bush.rotationOffset + 1.2,
                             bush.rotationOffset - 1.2,
                           ],
+                          y: [0, -2, 0],
                         }
                   }
                   transition={{
@@ -454,46 +428,27 @@ export function FlowerInteraction() {
                   className="relative flex items-end justify-center origin-bottom"
                 >
                   <motion.div
-                    initial={false}
-                    animate={
-                      isBloomed
-                        ? {
-                            scale: [
-                              bush.baseScale * 0.98,
-                              bush.baseScale * 1.04,
-                              bush.baseScale * 0.98,
-                            ],
-                            filter:
-                              'brightness(1.04) drop-shadow(0 6px 14px rgba(44,36,32,0.30))',
-                          }
-                        : {
-                            scale: bush.baseScale * 0.92,
-                            filter:
-                              'brightness(0.96) saturate(0.92) drop-shadow(0 4px 10px rgba(44,36,32,0.24))',
-                          }
-                    }
-                    whileHover={
-                      !reducedMotion
-                        ? {
-                            scale: bush.baseScale * 1.02,
-                            filter:
-                              'brightness(1.05) drop-shadow(0 6px 14px rgba(245,217,142,0.35))',
-                          }
-                        : {}
-                    }
+                    animate={{
+                      scale: isBloomed
+                        ? [bush.baseScale, bush.baseScale * 1.15, bush.baseScale * 1.06]
+                        : bush.baseScale,
+                      filter: isBloomed
+                        ? 'brightness(1.15) contrast(1.05) drop-shadow(0 6px 14px rgba(245,217,142,0.65))'
+                        : 'brightness(1) contrast(1) drop-shadow(0 4px 8px rgba(44,36,32,0.22))',
+                    }}
                     transition={{
                       duration: 0.6,
-                      ease: [0.25, 1, 0.5, 1],
+                      ease: [0.34, 1.56, 0.64, 1],
                     }}
-                    className={`relative ${bush.containerClasses} origin-bottom select-none`}
+                    className={`relative ${bush.containerClasses} origin-bottom`}
                   >
                     <Image
                       src={asset.src}
                       alt=""
                       fill
-                      sizes="(max-width: 768px) 180px, 240px"
+                      sizes="(max-width: 768px) 140px, 190px"
                       priority
-                      className="object-contain object-bottom transition-transform duration-300"
+                      className="object-contain object-bottom select-none pointer-events-none"
                     />
                   </motion.div>
                 </motion.div>

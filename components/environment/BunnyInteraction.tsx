@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 import { canopyAssets } from '@/lib/assets'
+import { playSound } from '@/lib/sounds'
 
 type BunnyPose = 'peek' | 'alert' | 'sit' | 'hop1' | 'hop2' | 'hide'
 
@@ -48,7 +49,6 @@ const WAYPOINTS: MeadowWaypoint[] = [
   },
 ]
 
-// Fisher-Yates shuffle with boundary duplicate avoidance
 function generateShuffledIndices(lastIndex: number | null): number[] {
   const pool = [0, 1, 2, 3, 4]
   for (let i = pool.length - 1; i > 0; i--) {
@@ -69,7 +69,6 @@ export function BunnyInteraction() {
   const [activeWaypoint, setActiveWaypoint] = useState<MeadowWaypoint>(WAYPOINTS[0])
   const [isInteracting, setIsInteracting] = useState(false)
 
-  // Stable lifecycle refs
   const isInteractingRef = useRef(false)
   const isVisibleRef = useRef(false)
   const lastWaypointIndexRef = useRef<number | null>(null)
@@ -105,25 +104,26 @@ export function BunnyInteraction() {
       setIsVisible(true)
       isVisibleRef.current = true
 
+      // Play soft, cute bunny pop sound on appearance
+      playSound('bunny_peek')
+
       // Visible duration: 2.2 to 3.8 seconds
       const visibleDuration = 2200 + Math.random() * 1600
 
       timerRef.current = setTimeout(() => {
         if (!isMountedRef.current || isInteractingRef.current) return
 
-        // Lower back down into grass
         setIsVisible(false)
         isVisibleRef.current = false
         appearancesCompleted += 1
 
         if (appearancesCompleted < appearanceCount) {
-          // Gap between peeks: 1.5 to 3.0 seconds
           const gapDuration = 1500 + Math.random() * 1500
           timerRef.current = setTimeout(() => {
             showNextAppearance()
           }, gapDuration)
         } else {
-          // Cycle finished: WAIT EXACTLY 5 SECONDS before next cycle
+          // Exactly 5-second pause between appearance cycles
           timerRef.current = setTimeout(() => {
             runAppearanceCycle()
           }, 5000)
@@ -137,7 +137,6 @@ export function BunnyInteraction() {
   useEffect(() => {
     isMountedRef.current = true
 
-    // Initial delay before first cycle starts in Explore
     timerRef.current = setTimeout(() => {
       runAppearanceCycle()
     }, 2400)
@@ -149,7 +148,7 @@ export function BunnyInteraction() {
   }, [runAppearanceCycle, clearTimer])
 
   // =========================================================================
-  // USER CLICK / TAP SEQUENCE (Alert -> Sit -> Hop 1 -> Hop 2 -> Hide (Pause) -> Exit)
+  // USER CLICK / TAP SEQUENCE (Alert -> Sit -> Hop 1 -> Hop 2 -> Hide -> Exit)
   // =========================================================================
   const handleBunnyClick = useCallback(() => {
     if (isInteractingRef.current || !isVisibleRef.current) return
@@ -157,6 +156,9 @@ export function BunnyInteraction() {
     clearTimer()
     isInteractingRef.current = true
     setIsInteracting(true)
+
+    // Play cheerful hop bounce sound
+    playSound('bunny_hop')
 
     if (reducedMotion) {
       setCurrentPose('alert')
@@ -175,38 +177,32 @@ export function BunnyInteraction() {
       return
     }
 
-    // Sequence 1: Alert (startled perk)
     setCurrentPose('alert')
 
-    // Sequence 2: Curious Sit after 450ms
     timerRef.current = setTimeout(() => {
       if (!isMountedRef.current) return
       setCurrentPose('sit')
 
-      // Sequence 3: Hop-1 (upward-forward leap) after 600ms
       timerRef.current = setTimeout(() => {
         if (!isMountedRef.current) return
         setCurrentPose('hop1')
+        playSound('bunny_hop')
 
-        // Sequence 4: Hop-2 (landing on ground) after 340ms
         timerRef.current = setTimeout(() => {
           if (!isMountedRef.current) return
           setCurrentPose('hop2')
 
-          // Sequence 5: Show the Hiding Pose visibly in the grass
           timerRef.current = setTimeout(() => {
             if (!isMountedRef.current) return
             setCurrentPose('hide')
 
-            // Let the user clearly see the shy hiding bunny for 850ms before disappearing!
+            // Hold hiding pose visibly for 850ms before disappearing
             timerRef.current = setTimeout(() => {
               if (!isMountedRef.current) return
-              // Sequence 6: Submerge into meadow
               setIsVisible(false)
               isVisibleRef.current = false
               setCurrentPose('peek')
 
-              // Exactly 5-second cooldown before resuming appearance scheduler
               timerRef.current = setTimeout(() => {
                 if (!isMountedRef.current) return
                 isInteractingRef.current = false
@@ -220,7 +216,6 @@ export function BunnyInteraction() {
     }, 450)
   }, [reducedMotion, clearTimer, runAppearanceCycle])
 
-  // Asset mapping
   const activeAsset =
     currentPose === 'alert'
       ? canopyAssets.rabbitAlert
@@ -239,109 +234,127 @@ export function BunnyInteraction() {
       className="pointer-events-none absolute inset-0 z-32 overflow-hidden select-none"
       aria-label="Meadow wildlife interaction plane"
     >
-      <AnimatePresence>
-        {isVisible && (
-          <div
-            style={
-              {
-                '--bx-m': activeWaypoint.mobile.left,
-                '--by-m': activeWaypoint.mobile.bottom,
-                '--bx-d': activeWaypoint.desktop.left,
-                '--by-d': activeWaypoint.desktop.bottom,
-              } as React.CSSProperties
+      <div
+        className="pointer-events-none absolute transition-all duration-700 ease-out"
+        style={{
+          left: `var(--bunny-left, ${activeWaypoint.desktop.left})`,
+          bottom: `var(--bunny-bottom, ${activeWaypoint.desktop.bottom})`,
+          transform: `scale(${activeWaypoint.scale})`,
+        }}
+      >
+        <style jsx>{`
+          div {
+            --bunny-left: ${activeWaypoint.desktop.left};
+            --bunny-bottom: ${activeWaypoint.desktop.bottom};
+          }
+          @media (max-width: 768px) {
+            div {
+              --bunny-left: ${activeWaypoint.mobile.left};
+              --bunny-bottom: ${activeWaypoint.mobile.bottom};
             }
-            className="pointer-events-none absolute left-[var(--bx-m)] bottom-[var(--by-m)] md:left-[var(--bx-d)] md:bottom-[var(--by-d)] -translate-x-1/2 origin-bottom overflow-visible"
-          >
+          }
+        `}</style>
+
+        <AnimatePresence mode="wait">
+          {isVisible && (
             <motion.div
               key={`bunny-actor-${activeWaypoint.id}`}
-              initial={{ y: 52, opacity: 0.6 }}
+              initial={{ y: '65%', opacity: 0 }}
               animate={
-                isInteracting
-                  ? currentPose === 'hop1'
-                    ? { x: 30, y: -26, opacity: 1 }
-                    : currentPose === 'hop2'
-                      ? { x: 62, y: 0, opacity: 1 }
-                      : currentPose === 'hide'
-                        ? { x: 68, y: 4, opacity: 1 }
-                        : { x: 0, y: 0, opacity: 1 }
-                  : {
-                      y: 0,
-                      opacity: 1,
-                      rotate: reducedMotion ? 0 : [-1.2, 1.2, -0.6, 0.6, 0],
-                    }
+                currentPose === 'hop1'
+                  ? { y: '-28%', x: '18px', opacity: 1 }
+                  : currentPose === 'hop2'
+                    ? { y: '0%', x: '36px', opacity: 1 }
+                    : { y: '0%', x: '0px', opacity: 1 }
               }
-              exit={{ y: 52, opacity: 0 }}
+              exit={{ y: '65%', opacity: 0 }}
               transition={
-                isInteracting
-                  ? { duration: 0.32, ease: [0.25, 1, 0.5, 1] }
-                  : {
-                      duration: 0.52,
-                      ease: [0.22, 1, 0.36, 1],
-                      rotate: reducedMotion
-                        ? { duration: 0 }
-                        : { repeat: Infinity, duration: 3.2, ease: 'easeInOut' },
-                    }
+                currentPose === 'hop1'
+                  ? { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
+                  : currentPose === 'hop2'
+                    ? { duration: 0.3, ease: [0.34, 1.3, 0.64, 1] }
+                    : { duration: 0.45, ease: [0.25, 1, 0.5, 1] }
               }
-              className="pointer-events-none relative origin-bottom"
+              className="relative flex items-end justify-center"
+              style={{
+                width: 'clamp(120px, 12vw, 170px)',
+                height: 'clamp(120px, 12vw, 170px)',
+              }}
             >
-              {/* Playful Bunny Speech Bubble */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={isInteracting ? 'bunny-fren' : 'bunny-psst'}
-                  initial={{ opacity: 0, scale: 0.6, y: 6 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.6, y: -4 }}
-                  transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
-                  className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
-                >
-                  <div className="relative rounded-full border border-slate-200/90 bg-white/95 px-3 py-1 shadow-md">
-                    <span className="text-xs font-bold tracking-wide text-slate-800 [font-family:var(--font-fredoka)]">
-                      {isInteracting ? 'hellooo there fren' : 'psst psst'}
-                    </span>
-                    {/* Speech bubble pointer triangle */}
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 border-b border-r border-slate-200 bg-white" />
-                  </div>
-                </motion.div>
+              {/* Speech bubble 1: "psst psst" when peeking */}
+              <AnimatePresence>
+                {!isInteracting && currentPose === 'peek' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.85 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.85 }}
+                    transition={{ duration: 0.25 }}
+                    className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
+                  >
+                    <div className="relative rounded-full border border-[#E8DED2] bg-[#FFF8EF]/95 px-3 py-1 shadow-sm backdrop-blur-sm">
+                      <span className="[font-family:var(--font-fredoka)] text-xs font-semibold tracking-wide text-[#51443E]">
+                        psst psst
+                      </span>
+                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 border-b border-r border-[#E8DED2] bg-[#FFF8EF]" />
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
 
-              {/* Clickable Hit Target */}
+              {/* Speech bubble 2: "hellooo there fren" when hopping */}
+              <AnimatePresence>
+                {isInteracting &&
+                  (currentPose === 'sit' ||
+                    currentPose === 'hop1' ||
+                    currentPose === 'hop2' ||
+                    currentPose === 'hide') && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6, scale: 0.85 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 4, scale: 0.85 }}
+                      transition={{ duration: 0.25 }}
+                      className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap z-20"
+                    >
+                      <div className="relative rounded-full border border-[#E8DED2] bg-[#FFF8EF]/95 px-3 py-1 shadow-sm backdrop-blur-sm">
+                        <span className="[font-family:var(--font-fredoka)] text-xs font-semibold tracking-wide text-[#51443E]">
+                          hellooo there fren
+                        </span>
+                        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 border-b border-r border-[#E8DED2] bg-[#FFF8EF]" />
+                      </div>
+                    </motion.div>
+                  )}
+              </AnimatePresence>
+
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleBunnyClick()
-                }}
-                className="group pointer-events-auto relative flex cursor-pointer items-end justify-center rounded-full p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-600"
-                aria-label="A shy bunny peeking out from the meadow grass (click to interact)"
+                onClick={handleBunnyClick}
+                disabled={isInteracting}
+                aria-label="Meadow rabbit peeking from grass"
+                className="pointer-events-auto relative h-full w-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E] rounded-full"
               >
-                {/* 
-                  Anchored Meadow Mask:
-                  Prevents baked-in base grass from floating above terrain
-                */}
                 <div
-                  className="relative aspect-[3/2] w-28 sm:w-34 md:w-42 overflow-hidden select-none"
+                  className="relative h-full w-full"
                   style={{
-                    transform: `scale(${activeWaypoint.scale})`,
-                    transformOrigin: 'bottom center',
                     maskImage:
-                      'linear-gradient(to top, transparent 0%, black 14%, black 100%)',
+                      'linear-gradient(to top, transparent 0%, black 18%, black 100%)',
                     WebkitMaskImage:
-                      'linear-gradient(to top, transparent 0%, black 14%, black 100%)',
+                      'linear-gradient(to top, transparent 0%, black 18%, black 100%)',
                   }}
                 >
                   <Image
                     src={activeAsset.src}
                     alt={activeAsset.alt}
                     fill
-                    sizes="(max-width: 768px) 140px, 170px"
-                    className="object-contain object-bottom pointer-events-none"
+                    sizes="(max-width: 768px) 130px, 170px"
+                    priority
+                    className="object-contain object-bottom pointer-events-none drop-shadow-[0_4px_10px_rgba(40,30,25,0.28)]"
                   />
                 </div>
               </button>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }

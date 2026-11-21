@@ -5,6 +5,7 @@ import type { Transition } from 'framer-motion'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import Image from 'next/image'
 import { canopyAssets } from '@/lib/assets'
+import { playSound } from '@/lib/sounds'
 import { useCanopyStore } from '@/state/canopy-store'
 
 type LadybugStage = 'resting' | 'flying' | 'departed'
@@ -21,14 +22,12 @@ export function LadybugInteraction() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const isInteractingRef = useRef(false)
 
-  // Sync state if store updates externally
   useEffect(() => {
     if (ladybugDeparted) {
       setStage('departed')
     }
   }, [ladybugDeparted])
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -42,7 +41,9 @@ export function LadybugInteraction() {
     if (stage !== 'resting' || isInteractingRef.current || ladybugDeparted) return
     isInteractingRef.current = true
 
-    // Tiny 120ms natural anticipation pause, then launch directly into flight!
+    // Play liftoff flutter sound effect
+    playSound('ladybug_fly')
+
     timerRef.current = setTimeout(() => {
       setStage('flying')
     }, 120)
@@ -67,11 +68,6 @@ export function LadybugInteraction() {
 
   return (
     <>
-      {/* =========================================================================
-          1. ANCHORED RESTING LEAF CONTAINER (Permanently anchored in meadow)
-          - While resting: displays ladybug-idle.png
-          - Upon takeoff & departure: seamlessly displays empty-leaf.png
-          ========================================================================= */}
       <div
         className="pointer-events-none absolute z-[42] select-none"
         style={{
@@ -80,7 +76,6 @@ export function LadybugInteraction() {
         }}
       >
         <div className="relative h-[73px] w-[110px] sm:h-[86px] sm:w-[130px] md:h-[100px] md:w-[150px]">
-          {/* State A: Resting Ladybug on Leaf */}
           {stage === 'resting' && (
             <motion.div
               key="resting-ladybug-leaf"
@@ -107,7 +102,6 @@ export function LadybugInteraction() {
                 className="pointer-events-none object-contain"
               />
 
-              {/* Accessible Interactive Target */}
               <button
                 type="button"
                 onClick={triggerTakeoff}
@@ -125,7 +119,6 @@ export function LadybugInteraction() {
             </motion.div>
           )}
 
-          {/* State B: Empty Leaf (Stays behind permanently once ladybug takes off) */}
           {(stage === 'flying' || stage === 'departed') && (
             <motion.div
               key="empty-leaf-stationary"
@@ -147,10 +140,6 @@ export function LadybugInteraction() {
         </div>
       </div>
 
-      {/* =========================================================================
-          2. AIRBORNE FLYING LADYBUG (Full uncropped ladybug-fly.png asset)
-          Performs 5 graceful diagonal criss-cross passes across the screen
-          ========================================================================= */}
       <AnimatePresence>
         {stage === 'flying' && (
           <motion.div
@@ -172,38 +161,10 @@ export function LadybugInteraction() {
                     opacity: [1, 0.8, 0],
                   }
                 : {
-                    left: [
-                      '74vw',  // Takeoff (aligned with resting leaf)
-                      '18vw',  // Pass 1: Sweeps up-left across meadow
-                      '82vw',  // Pass 2: Sweeps up-right across central garden
-                      '14vw',  // Pass 3: Sweeps up-left toward lower cherry tree branches
-                      '76vw',  // Pass 4: Sweeps right beneath blooming canopy
-                      '108vw', // Pass 5: Soars diagonally off-screen into upper-right sky
-                    ],
-                    top: [
-                      '76vh',  // Takeoff
-                      '58vh',  // Pass 1
-                      '44vh',  // Pass 2
-                      '30vh',  // Pass 3
-                      '16vh',  // Pass 4
-                      '-14vh', // Pass 5
-                    ],
-                    rotate: [
-                      -15,     // Takeoff
-                      -34,     // Flying up-left
-                      30,      // Flying up-right
-                      -38,     // Flying up-left
-                      26,      // Flying up-right
-                      45,      // Soaring departure
-                    ],
-                    scale: [
-                      0.95,    // Takeoff
-                      1.08,    // Swooping closer
-                      1.12,    // Mid-garden
-                      0.98,    // Climbing
-                      0.80,    // High canopy
-                      0.35,    // Distant departure
-                    ],
+                    left: ['74vw', '18vw', '82vw', '14vw', '76vw', '108vw'],
+                    top: ['76vh', '58vh', '44vh', '30vh', '16vh', '-14vh'],
+                    rotate: [-15, -34, 30, -38, 26, 45],
+                    scale: [0.95, 1.08, 1.12, 0.98, 0.8, 0.35],
                     opacity: [1, 1, 1, 1, 0.9, 0],
                   }
             }
@@ -216,7 +177,6 @@ export function LadybugInteraction() {
               transformOrigin: 'center center',
             }}
           >
-            {/* The full uncropped ladybug-fly illustration */}
             <div className="relative h-full w-full">
               <Image
                 src={canopyAssets.ladybugFly.src}

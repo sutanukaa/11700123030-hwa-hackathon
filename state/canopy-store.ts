@@ -8,6 +8,8 @@ interface CanopyState {
   ladybugDeparted: boolean
   setLadybugDeparted: (departed: boolean) => void
   resetSession: () => void
+  isMuted: boolean
+  toggleMuted: () => void
 }
 
 export const useCanopyStore = create<CanopyState>((set) => ({
@@ -15,10 +17,11 @@ export const useCanopyStore = create<CanopyState>((set) => ({
   setMode: (mode) =>
     set((state) => ({
       mode,
-      // Reset departure only when returning to the initial idle landing screen
       ...(mode === 'idle' ? { ladybugDeparted: false } : {}),
     })),
   ladybugDeparted: false,
   setLadybugDeparted: (ladybugDeparted) => set({ ladybugDeparted }),
   resetSession: () => set({ mode: 'idle', ladybugDeparted: false }),
+  isMuted: false,
+  toggleMuted: () => set((state) => ({ isMuted: !state.isMuted })),
 }))

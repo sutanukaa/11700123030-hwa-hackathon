@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { canopyAssets } from '@/lib/assets'
+import { playSound } from '@/lib/sounds'
 
 // Safe meadow flight waypoints across open wildflower areas
 interface Waypoint {
@@ -142,14 +143,13 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
 
   // =========================================================================
   // CHOREOGRAPHED CATCH SEQUENCE
-  // 1. Big Golden Butterfly in Screen Center
-  // 2. Text Appears: "Well, someone's persistent!"
-  // 3. Text SHRINKS & DISAPPEARS FIRST
-  // 4. Butterfly Shrinks & Flies Away (Independently)
   // =========================================================================
   const handleCatch = useCallback(() => {
     if (isCaughtRef.current) return
     isCaughtRef.current = true
+
+    // Play celestial magical chime sound
+    playSound('butterfly')
 
     // STEP 1: Full-screen overlay activates with BIG golden butterfly in screen center
     setCelebrationStage('big_center')
@@ -207,7 +207,6 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
                 <span className="font-display text-xs font-medium tracking-wide text-[#51443E]">
                   Catch me if you can
                 </span>
-                {/* Speech bubble pointer triangle */}
                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-2 w-2 rotate-45 border-b border-r border-[#E8DED2] bg-[#FFF8EF]" />
               </div>
             </div>
@@ -274,10 +273,8 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
             className="pointer-events-none fixed inset-0 z-[90] flex flex-col items-center justify-center overflow-hidden"
             aria-live="polite"
           >
-            {/* Theatrical background overlay: dims and blurs background garden */}
             <div className="absolute inset-0 bg-[#1D1714]/50 backdrop-blur-[4px]" />
 
-            {/* Radiant golden ambient spotlight */}
             <div
               className="absolute inset-0"
               style={{
@@ -286,7 +283,6 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
               }}
             />
 
-            {/* Whole-screen golden sparkles */}
             {SCREEN_SPARKLES.map((s) => (
               <motion.span
                 key={s.id}
@@ -313,14 +309,12 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
               />
             ))}
 
-            {/* Centerpiece Golden Butterfly (BIG in center of screen!) */}
             <motion.div
               initial={{ scale: 0.2, opacity: 0, y: 30 }}
               animate={
                 celebrationStage === 'big_center'
                   ? { scale: 1, opacity: 1, x: 0, y: 0 }
                   : {
-                      // Stage: fly_away -> butterfly shrinks small and arcs up into the sky
                       scale: 0.18,
                       x: '75vw',
                       y: '-75vh',
@@ -335,7 +329,6 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
               }
               className="relative flex items-center justify-center"
             >
-              {/* BIG Butterfly Image: 280px wide on mobile, 360px wide on desktop! */}
               <motion.div
                 animate={{
                   scale: [1, 1.05, 1],
@@ -358,7 +351,6 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
                 />
               </motion.div>
 
-              {/* Radiant Sparkle Burst radiating from the BIG Butterfly */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 {BURST_PARTICLES.map((p) => (
                   <motion.span
@@ -385,7 +377,6 @@ export function ButterflyInteraction({ isAssembled = true }: ButterflyProps) {
               </div>
             </motion.div>
 
-            {/* SEPARATE Message Banner: Explicitly shrinks and fades away IN PLACE */}
             <AnimatePresence>
               {showGoldenText && (
                 <motion.div

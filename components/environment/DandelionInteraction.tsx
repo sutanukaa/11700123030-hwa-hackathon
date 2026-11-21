@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { canopyAssets } from '@/lib/assets'
+import { playSound } from '@/lib/sounds'
 
 type DandelionMode = 'burst' | 'breeze'
 
@@ -58,54 +59,43 @@ function DandelionPuffSeed() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Soft Feathery Glow Behind Umbrella */}
-      <circle cx="30" cy="20" r="16" fill="rgba(255, 255, 255, 0.28)" />
-      <circle cx="30" cy="20" r="9" fill="rgba(255, 255, 255, 0.45)" />
+      <defs>
+        <radialGradient
+          id="pappusGlow"
+          cx="50%"
+          cy="20%"
+          r="50%"
+          fx="50%"
+          fy="20%"
+        >
+          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+          <stop offset="60%" stopColor="#FFF9EB" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#F5EFE0" stopOpacity="0.3" />
+        </radialGradient>
+      </defs>
 
-      {/* Main Fluffy Pappus Umbrella Tufts */}
-      <g stroke="rgba(255, 255, 255, 0.95)" strokeLinecap="round">
-        {/* Core Radial Umbrella Spokes */}
-        <line x1="30" y1="20" x2="10" y2="6" strokeWidth="1.3" />
-        <line x1="30" y1="20" x2="16" y2="4" strokeWidth="1.3" />
-        <line x1="30" y1="20" x2="23" y2="2" strokeWidth="1.3" />
-        <line x1="30" y1="20" x2="30" y2="1" strokeWidth="1.5" />
-        <line x1="30" y1="20" x2="37" y2="2" strokeWidth="1.3" />
-        <line x1="30" y1="20" x2="44" y2="4" strokeWidth="1.3" />
-        <line x1="30" y1="20" x2="50" y2="6" strokeWidth="1.3" />
-
-        {/* Outer Fanned Wings */}
-        <line x1="30" y1="20" x2="6" y2="12" strokeWidth="1.1" />
-        <line x1="30" y1="20" x2="54" y2="12" strokeWidth="1.1" />
-        <line x1="30" y1="20" x2="4" y2="18" strokeWidth="0.9" />
-        <line x1="30" y1="20" x2="56" y2="18" strokeWidth="0.9" />
-
-        {/* Secondary Feathery Down Spines */}
-        <line x1="30" y1="20" x2="14" y2="10" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-        <line x1="30" y1="20" x2="20" y2="6" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-        <line x1="30" y1="20" x2="27" y2="4" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-        <line x1="30" y1="20" x2="33" y2="4" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-        <line x1="30" y1="20" x2="40" y2="6" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-        <line x1="30" y1="20" x2="46" y2="10" strokeWidth="0.85" stroke="rgba(255, 250, 240, 0.9)" />
-
-        {/* Soft Fluffy Barbs at Tips */}
-        <circle cx="10" cy="6" r="1.6" fill="#FFFFFF" />
-        <circle cx="16" cy="4" r="1.6" fill="#FFFFFF" />
-        <circle cx="23" cy="2" r="1.6" fill="#FFFFFF" />
-        <circle cx="30" cy="1" r="2.0" fill="#FFFFFF" />
-        <circle cx="37" cy="2" r="1.6" fill="#FFFFFF" />
-        <circle cx="44" cy="4" r="1.6" fill="#FFFFFF" />
-        <circle cx="50" cy="6" r="1.6" fill="#FFFFFF" />
-        <circle cx="6" cy="12" r="1.4" fill="#FFFFFF" />
-        <circle cx="54" cy="12" r="1.4" fill="#FFFFFF" />
+      {/* Fluffy Umbrella Filaments (Pappus Rays) */}
+      <g stroke="rgba(255, 255, 255, 0.85)" strokeWidth="0.8" strokeLinecap="round">
+        <line x1="30" y1="18" x2="30" y2="2" />
+        <line x1="30" y1="18" x2="20" y2="4" />
+        <line x1="30" y1="18" x2="40" y2="4" />
+        <line x1="30" y1="18" x2="11" y2="9" />
+        <line x1="30" y1="18" x2="49" y2="9" />
+        <line x1="30" y1="18" x2="5" y2="16" />
+        <line x1="30" y1="18" x2="55" y2="16" />
+        <line x1="30" y1="18" x2="3" y2="24" />
+        <line x1="30" y1="18" x2="57" y2="24" />
+        <line x1="30" y1="18" x2="7" y2="30" />
+        <line x1="30" y1="18" x2="53" y2="30" />
       </g>
 
-      {/* Central Fluff Hub */}
-      <circle cx="30" cy="20" r="2.6" fill="#FFFFFF" />
+      {/* Outer Fluffy Fiber Corona */}
+      <circle cx="30" cy="18" r="16" fill="url(#pappusGlow)" />
 
-      {/* Slender Stalk (Pedicel) */}
+      {/* Central Pappus Stalk (Beak) */}
       <line
         x1="30"
-        y1="20"
+        y1="18"
         x2="30"
         y2="52"
         stroke="rgba(245, 240, 225, 0.9)"
@@ -133,70 +123,26 @@ export function DandelionInteraction() {
 
   const handleDandelionTrigger = useCallback(() => {
     const now = Date.now()
-    // Debounce guard to prevent duplicate synthetic events from single clicks
     if (now - lastClickTimeRef.current < 300) return
     lastClickTimeRef.current = now
 
-    // 1. Stem compression recoil
+    // Play soft airy dandelion puff sound
+    playSound('dandelion_puff')
+
+    // Stem compression recoil
     setIsBending(true)
     setTimeout(() => setIsBending(false), 420)
 
-    // 2. Increment click count by exactly 1
+    // Increment click count
     setClickCount((c) => c + 1)
   }, [])
 
-  // Mathematical alternation: Click 1 = 'burst', Click 2 = 'breeze', Click 3 = 'burst', etc.
   const activeMode: DandelionMode = clickCount % 2 === 1 ? 'burst' : 'breeze'
 
   return (
     <>
       {/* =====================================================================
-          1. FULL-SCREEN DANDELION BREEZE (Mode B: Even Clicks: 2, 4, 6...)
-          ===================================================================== */}
-      <AnimatePresence>
-        {clickCount > 0 && activeMode === 'breeze' && !reducedMotion && (
-          <div
-            key={`dandelion-breeze-event-${clickCount}`}
-            className="pointer-events-none fixed inset-0 z-[65] overflow-hidden"
-            aria-hidden="true"
-          >
-            {/* Soft summer breeze atmosphere sheen */}
-            <div className="absolute inset-0 bg-[rgba(255,248,220,0.08)]" />
-
-            {BREEZE_SEEDS.map((s) => (
-              <motion.div
-                key={s.id}
-                initial={{
-                  left: s.startX,
-                  top: s.startY,
-                  opacity: 0,
-                  scale: 0.4,
-                  rotate: 0,
-                }}
-                animate={{
-                  x: [0, s.driftX * 0.5, s.driftX],
-                  y: [0, s.driftY * 0.6, s.driftY],
-                  opacity: [0, 0.98, 0.92, 0],
-                  scale: [0.45, s.scale * 1.08, s.scale],
-                  rotate: [-14, 18, -10, 14],
-                }}
-                transition={{
-                  duration: s.duration,
-                  delay: s.delay,
-                  ease: [0.25, 1, 0.5, 1],
-                }}
-                className="absolute flex items-center justify-center origin-center"
-                style={{ width: s.width, height: s.height }}
-              >
-                <DandelionPuffSeed />
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* =====================================================================
-          2. DANDELION PLANT IN MEADOW (Clickable unlimited times)
+          DANDELION PLANT IN MEADOW
           ===================================================================== */}
       <div
         className="pointer-events-none absolute inset-0 z-35 overflow-hidden select-none"
@@ -214,7 +160,6 @@ export function DandelionInteraction() {
             className="group pointer-events-auto relative flex cursor-pointer items-end justify-center rounded-full p-2 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F5D98E]"
             aria-label="Wild dandelion in the meadow (click to blow seeds)"
           >
-            {/* Natural plant sway + recoil flex */}
             <motion.div
               animate={
                 reducedMotion
@@ -235,7 +180,6 @@ export function DandelionInteraction() {
               }}
               className="relative flex items-end justify-center origin-bottom"
             >
-              {/* Dandelion Plant Artwork */}
               <motion.div
                 animate={{
                   scale: isBending
@@ -261,9 +205,7 @@ export function DandelionInteraction() {
             </motion.div>
           </button>
 
-          {/* =====================================================================
-              RADIAL PUFF BURST (Mode A: Odd Clicks: 1, 3, 5...)
-              ===================================================================== */}
+          {/* Radial Puff Burst (Odd Clicks: 1, 3, 5...) */}
           <AnimatePresence>
             {clickCount > 0 && activeMode === 'burst' && (
               <div
@@ -271,7 +213,6 @@ export function DandelionInteraction() {
                 className="pointer-events-none absolute top-[18%] left-[48%] -translate-x-1/2 -translate-y-1/2 overflow-visible"
                 aria-hidden="true"
               >
-                {/* 24 Ascending Dandelion Seeds */}
                 {BURST_SEEDS.map((s) => (
                   <motion.div
                     key={s.id}
@@ -308,7 +249,6 @@ export function DandelionInteraction() {
                   </motion.div>
                 ))}
 
-                {/* 12 Golden Sparkles */}
                 {!reducedMotion &&
                   MEADOW_SPARKLES.map((m) => (
                     <motion.div
@@ -325,12 +265,11 @@ export function DandelionInteraction() {
                         delay: m.delay,
                         ease: 'easeOut',
                       }}
-                      className="absolute rounded-full bg-[#FFFBEA]"
+                      className="absolute rounded-full bg-[#FFFDF0]"
                       style={{
                         width: m.size,
                         height: m.size,
-                        boxShadow:
-                          '0 0 6px #F5D98E, 0 0 12px rgba(255,250,230,0.9)',
+                        boxShadow: '0 0 8px #F5D98E, 0 0 14px rgba(255,253,240,0.9)',
                       }}
                     />
                   ))}
@@ -339,6 +278,52 @@ export function DandelionInteraction() {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Screen-Wide Summer Breeze (Even Clicks: 2, 4, 6...) */}
+      <AnimatePresence>
+        {clickCount > 0 && activeMode === 'breeze' && (
+          <div
+            key={`dandelion-breeze-event-${clickCount}`}
+            className="pointer-events-none fixed inset-0 z-[65] overflow-hidden"
+            aria-hidden="true"
+          >
+            {BREEZE_SEEDS.map((s) => (
+              <motion.div
+                key={s.id}
+                initial={{
+                  left: s.startX,
+                  top: s.startY,
+                  opacity: 0,
+                  scale: 0.4,
+                  rotate: -15,
+                }}
+                animate={
+                  reducedMotion
+                    ? {
+                        opacity: [0, 0.7, 0],
+                      }
+                    : {
+                        x: [0, s.driftX * 0.48, s.driftX],
+                        y: [0, s.driftY * 0.7, s.driftY],
+                        opacity: [0, 0.95, 0.9, 0],
+                        scale: [0.4, s.scale, s.scale * 0.95],
+                        rotate: [-15, 8, -6],
+                      }
+                }
+                transition={{
+                  duration: s.duration,
+                  delay: s.delay,
+                  ease: [0.25, 0.85, 0.45, 1],
+                }}
+                className="absolute flex items-center justify-center origin-center"
+                style={{ width: s.width, height: s.height }}
+              >
+                <DandelionPuffSeed />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

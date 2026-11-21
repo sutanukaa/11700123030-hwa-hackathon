@@ -23,7 +23,9 @@ import { DandelionInteraction } from './DandelionInteraction'
 import { EnvironmentAtmosphere } from './EnvironmentAtmosphere'
 import { EnvironmentLayer } from './EnvironmentLayer'
 import { EnvironmentLighting } from './EnvironmentLighting'
+import { ExploreBanner } from './ExploreBanner'
 import { FlowerInteraction } from './FlowerInteraction'
+import { GardenAudio } from './GardenAudio'
 import { LadybugInteraction } from './LadybugInteraction'
 import { ModeInvitation } from './ModeInvitation'
 import { ModeSwitcher } from './ModeSwitcher'
@@ -31,7 +33,6 @@ import { ScrollCue } from './ScrollCue'
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value))
 
-// Calculate effective parallax strength with an absolute 36px ceiling
 const getParallaxValue = (
   base: number,
   multiplier: number,
@@ -45,6 +46,7 @@ export function CanopyEnvironment() {
   const containerRef = useRef<HTMLDivElement>(null)
   const reducedMotion = useReducedMotion()
   const mode = useCanopyStore((state) => state.mode)
+  const setMode = useCanopyStore((state) => state.setMode)
   const pointerX = useMotionValue(0)
   const pointerY = useMotionValue(0)
 
@@ -72,19 +74,23 @@ export function CanopyEnvironment() {
       if (latest >= 0.84) {
         setIsGardenAssembled(true)
         if (!timer && !showInvitation) {
-          // Pause for 1 second so the visitor can take in the assembled garden
           timer = setTimeout(() => {
             setShowInvitation(true)
           }, 1000)
         }
       } else {
+        // Scrolled back up: teardown assembly and EXIT explore/unwind mode to 'idle'
         setIsGardenAssembled(false)
-        // If the user scrolls back up, cancel timer and hide invitation
         if (timer) {
           clearTimeout(timer)
           timer = null
         }
         setShowInvitation(false)
+
+        // Automatically exit explore mode so interactions unmount and user can re-choose
+        if (useCanopyStore.getState().mode !== 'idle') {
+          setMode('idle')
+        }
       }
     })
 
@@ -92,14 +98,13 @@ export function CanopyEnvironment() {
       if (timer) clearTimeout(timer)
       unsubscribe()
     }
-  }, [scrollYProgress, reducedMotion, showInvitation])
+  }, [scrollYProgress, reducedMotion, showInvitation, setMode])
 
   // =========================================================================
   // SCROLL-DRIVEN ASSEMBLY TRANSFORMS (Progress: 0.0 to 1.0)
   // =========================================================================
 
-  // Stage A: Mountains & Rolling Hills
-  const mountainsOpacity = useTransform(scrollYProgress, [0.0, 0.24], [0.15, 1.0])
+  // Stage A: Rolling Hills (Middle Distance)
   const hillsY = useTransform(scrollYProgress, [0.0, 0.3], [48, 0])
   const hillsOpacity = useTransform(scrollYProgress, [0.0, 0.3], [0, 1])
 
@@ -157,12 +162,9 @@ export function CanopyEnvironment() {
         className="sticky top-0 h-screen w-full overflow-hidden select-none bg-[#7cb8d0]"
       >
         {/* =========================================================================
-            LAYER 1: SKY & MOUNTAIN RANGE (Backdrop Base)
+            LAYER 1: SKY & MOUNTAIN RANGE (Permanent panoramic backdrop - no fading)
             ========================================================================= */}
-        <motion.div
-          className="absolute inset-0 z-0 h-full w-full pointer-events-none"
-          style={reducedMotion ? {} : { opacity: mountainsOpacity }}
-        >
+        <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
           <EnvironmentLayer
             src={canopyAssets.mountainRange.src}
             alt=""
@@ -174,7 +176,7 @@ export function CanopyEnvironment() {
             objectPosition="center top"
             imageClassName="scale-105 object-cover"
           />
-        </motion.div>
+        </div>
 
         {/* =========================================================================
             LAYER 2: ROLLING HILLS (Middle Distance)
@@ -229,7 +231,8 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3.2: FLOWER, DANDELION, BUNNY & LADYBUG INTERACTIONS (Meadow Interaction Plane)
+            LAYER 3.2: FLOWER, DANDELION, BUNNY & LADYBUG INTERACTIONS
+            (Mounts ONLY in Explore mode; unmounts immediately when scrolling up)
             ========================================================================= */}
         {mode === 'explore' && <FlowerInteraction />}
         {mode === 'explore' && <DandelionInteraction />}
@@ -265,7 +268,7 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 5: FOREGROUND BUSHES (pointer-events-none prevents blocking clicks)
+            LAYER 5: FOREGROUND BUSHES
             ========================================================================= */}
         <motion.div
           className="absolute inset-0 z-40 h-full w-full pointer-events-none"
@@ -291,7 +294,7 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 6: BUTTERFLY INTERACTION (Active in Explore mode)
+            LAYER 6: BUTTERFLY INTERACTION
             ========================================================================= */}
         {mode === 'explore' && <ButterflyInteraction isAssembled={true} />}
 
@@ -299,13 +302,13 @@ export function CanopyEnvironment() {
         <EnvironmentAtmosphere />
         <EnvironmentLighting />
 
-        {/* Subtle Initial Scroll Cue */}
+        {/* Scroll Cue */}
         <ScrollCue
           scrollYProgress={scrollYProgress}
           reducedMotion={reducedMotion}
         />
 
-        {/* Stage D: Opening Invitation (pointer-events-none container prevents click blocking) */}
+        {/* Stage D: Opening Invitation (Shows when assembled & mode is idle) */}
         <AnimatePresence>
           {showInvitation && mode === 'idle' && (
             <motion.div
@@ -320,6 +323,12 @@ export function CanopyEnvironment() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Ambient Garden Audio (Plays explore-bg.mp3 only in Explore mode) */}
+        <GardenAudio />
+
+        {/* Exploration Prompt Banner */}
+        <ExploreBanner />
 
         {/* Persistent Mode Switcher */}
         <ModeSwitcher />

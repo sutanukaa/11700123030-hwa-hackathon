@@ -21,6 +21,7 @@ import { ButterflyInteraction } from './ButterflyInteraction'
 import { EnvironmentAtmosphere } from './EnvironmentAtmosphere'
 import { EnvironmentLayer } from './EnvironmentLayer'
 import { EnvironmentLighting } from './EnvironmentLighting'
+import { FlowerInteraction } from './FlowerInteraction'
 import { ModeInvitation } from './ModeInvitation'
 import { ModeSwitcher } from './ModeSwitcher'
 import { ScrollCue } from './ScrollCue'
@@ -311,6 +312,11 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
+            LAYER 3.2: FLOWER BLOOMING INTERACTION (Meadow Interaction Plane)
+            ========================================================================= */}
+        {mode === 'explore' && <FlowerInteraction />}
+
+        {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE
             ========================================================================= */}
         <motion.div
@@ -365,11 +371,9 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 6: BUTTERFLY INTERACTION (Elevated above all landscape layers)
+            LAYER 6: BUTTERFLY INTERACTION (Active in Explore mode)
             ========================================================================= */}
-        {mode === 'explore' && (
-          <ButterflyInteraction isAssembled={isGardenAssembled} />
-        )}
+        {mode === 'explore' && <ButterflyInteraction isAssembled={true} />}
 
         {/* Atmospheric Overlays */}
         <EnvironmentAtmosphere />

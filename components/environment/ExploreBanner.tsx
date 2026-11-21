@@ -21,7 +21,7 @@ export function ExploreBanner() {
     <AnimatePresence>
       {mode === 'explore' && !isDismissed && (
         <motion.div
-          initial={{ opacity: 0, y: -24, scale: 0.95 }}
+          initial={{ opacity: 0, y: -20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -16, scale: 0.95 }}
           transition={{
@@ -29,13 +29,13 @@ export function ExploreBanner() {
             ease: [0.25, 1, 0.5, 1],
             delay: 0.2,
           }}
-          className="pointer-events-auto absolute top-4 left-4 right-28 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[70] flex items-center justify-between gap-2.5 rounded-full border-2 border-white/60 bg-[#82C2E5] px-4 py-2 sm:px-5 sm:py-2.5 shadow-lg backdrop-blur-sm"
+          className="pointer-events-auto absolute top-[68px] left-4 right-4 mx-auto max-w-[420px] sm:top-5 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:max-w-none sm:w-auto z-[70] flex items-center justify-between gap-2.5 rounded-2xl sm:rounded-full border-2 border-white/60 bg-[#82C2E5] px-4 py-2 sm:px-5 sm:py-2.5 shadow-lg backdrop-blur-sm"
           role="status"
           aria-live="polite"
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="h-4 w-4 shrink-0 text-white animate-pulse" />
-            <span className="[font-family:var(--font-fredoka)] text-xs sm:text-sm font-semibold tracking-wide text-white drop-shadow-xs">
+            <span className="[font-family:var(--font-fredoka)] text-xs sm:text-sm font-semibold tracking-wide text-white drop-shadow-xs leading-snug">
               Interact and explore all the living elements of the garden!
             </span>
           </div>

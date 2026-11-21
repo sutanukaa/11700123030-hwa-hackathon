@@ -17,6 +17,7 @@ import {
 } from 'react'
 import { canopyAssets } from '@/lib/assets'
 import { useCanopyStore } from '@/state/canopy-store'
+import { BreathingGuide } from './BreathingGuide'
 import { BunnyInteraction } from './BunnyInteraction'
 import { ButterflyInteraction } from './ButterflyInteraction'
 import { DandelionInteraction } from './DandelionInteraction'
@@ -30,6 +31,8 @@ import { LadybugInteraction } from './LadybugInteraction'
 import { ModeInvitation } from './ModeInvitation'
 import { ModeSwitcher } from './ModeSwitcher'
 import { ScrollCue } from './ScrollCue'
+import { SleepingBunny } from './SleepingBunny'
+import { UnwindBreeze } from './UnwindBreeze'
 
 const clamp = (value: number) => Math.max(-1, Math.min(1, value))
 
@@ -87,7 +90,7 @@ export function CanopyEnvironment() {
         }
         setShowInvitation(false)
 
-        // Automatically exit explore mode so interactions unmount and user can re-choose
+        // Automatically exit active modes so interactions unmount and user can re-choose
         if (useCanopyStore.getState().mode !== 'idle') {
           setMode('idle')
         }
@@ -162,7 +165,7 @@ export function CanopyEnvironment() {
         className="sticky top-0 h-screen w-full overflow-hidden select-none bg-[#7cb8d0]"
       >
         {/* =========================================================================
-            LAYER 1: SKY & MOUNTAIN RANGE (Permanent panoramic backdrop - no fading)
+            LAYER 1: SKY & MOUNTAIN RANGE (Permanent panoramic backdrop)
             ========================================================================= */}
         <div className="absolute inset-0 z-0 h-full w-full pointer-events-none">
           <EnvironmentLayer
@@ -231,13 +234,18 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3.2: FLOWER, DANDELION, BUNNY & LADYBUG INTERACTIONS
-            (Mounts ONLY in Explore mode; unmounts immediately when scrolling up)
+            LAYER 3.2: EXPLORE INTERACTIONS (Mounts ONLY in Explore mode)
             ========================================================================= */}
         {mode === 'explore' && <FlowerInteraction />}
         {mode === 'explore' && <DandelionInteraction />}
         {mode === 'explore' && <BunnyInteraction />}
         {mode === 'explore' && <LadybugInteraction />}
+
+        {/* =========================================================================
+            LAYER 3.3: UNWIND SANCTUARY (Mounts ONLY in Unwind mode)
+            ========================================================================= */}
+        {mode === 'unwind' && <SleepingBunny />}
+        {mode === 'unwind' && <UnwindBreeze />}
 
         {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE
@@ -294,9 +302,12 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 6: BUTTERFLY INTERACTION
+            LAYER 6: BUTTERFLY INTERACTION (Explore Only)
             ========================================================================= */}
         {mode === 'explore' && <ButterflyInteraction isAssembled={true} />}
+
+        {/* Optional Mindful Breathing Guide (Unwind Only) */}
+        {mode === 'unwind' && <BreathingGuide />}
 
         {/* Atmospheric Overlays */}
         <EnvironmentAtmosphere />
@@ -324,10 +335,10 @@ export function CanopyEnvironment() {
           )}
         </AnimatePresence>
 
-        {/* Ambient Garden Audio (Plays explore-bg.mp3 only in Explore mode) */}
+        {/* Ambient Garden Audio (Crossfades Explore and Unwind soundscapes) */}
         <GardenAudio />
 
-        {/* Exploration Prompt Banner */}
+        {/* Exploration Prompt Banner (Explore Only) */}
         <ExploreBanner />
 
         {/* Persistent Mode Switcher */}

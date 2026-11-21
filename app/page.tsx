@@ -1,8 +1,9 @@
+import { CanopyEnvironment } from '@/components/environment/CanopyEnvironment'
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Welcome</h1>
-      <p className="mt-4 text-lg">Next.js + Tailwind CSS</p>
+    <main className="relative min-h-[100svh] w-full max-w-full overflow-x-clip bg-[#B9D3E6]">
+      <CanopyEnvironment />
     </main>
   )
 }

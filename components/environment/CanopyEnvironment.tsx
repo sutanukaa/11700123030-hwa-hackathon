@@ -17,6 +17,7 @@ import {
 } from 'react'
 import { canopyAssets } from '@/lib/assets'
 import { useCanopyStore } from '@/state/canopy-store'
+import { ButterflyInteraction } from './ButterflyInteraction'
 import { EnvironmentAtmosphere } from './EnvironmentAtmosphere'
 import { EnvironmentLayer } from './EnvironmentLayer'
 import { EnvironmentLighting } from './EnvironmentLighting'
@@ -49,11 +50,13 @@ export function CanopyEnvironment() {
     offset: ['start start', 'end end'],
   })
 
-  // State to control the 1-second pause before showing the invitation dialog
+  // State to control garden assembly and invitation dialog pause
+  const [isGardenAssembled, setIsGardenAssembled] = useState(Boolean(reducedMotion))
   const [showInvitation, setShowInvitation] = useState(Boolean(reducedMotion))
 
   useEffect(() => {
     if (reducedMotion) {
+      setIsGardenAssembled(true)
       setShowInvitation(true)
       return
     }
@@ -63,6 +66,7 @@ export function CanopyEnvironment() {
     const unsubscribe = scrollYProgress.on('change', (latest) => {
       // Once the garden is fully formed (at or above 84% scroll)
       if (latest >= 0.84) {
+        setIsGardenAssembled(true)
         if (!timer && !showInvitation) {
           // Pause for 1 second so the visitor can take in the assembled garden
           timer = setTimeout(() => {
@@ -70,6 +74,7 @@ export function CanopyEnvironment() {
           }, 1000)
         }
       } else {
+        setIsGardenAssembled(false)
         // If the user scrolls back up, cancel timer and hide invitation
         if (timer) {
           clearTimeout(timer)
@@ -87,8 +92,6 @@ export function CanopyEnvironment() {
 
   // =========================================================================
   // SCROLL-DRIVEN ASSEMBLY TRANSFORMS (Progress: 0.0 to 1.0)
-  // Nested outer motion.divs handle these transforms cleanly without
-  // interfering with inner EnvironmentLayer pointer-spring transforms.
   // =========================================================================
 
   // Stage A: Mountains & Rolling Hills
@@ -131,65 +134,72 @@ export function CanopyEnvironment() {
         ((event.clientX - bounds.left) / bounds.width - 0.5) * 2
       const normalizedY =
         ((event.clientY - bounds.top) / bounds.height - 0.5) * 2
+
       pointerX.set(clamp(normalizedX))
       pointerY.set(clamp(normalizedY))
     },
     [pointerX, pointerY, reducedMotion],
   )
 
-  const resetPointer = useCallback(() => {
+  const handlePointerLeave = useCallback(() => {
     pointerX.set(0)
     pointerY.set(0)
   }, [pointerX, pointerY])
 
   return (
-    // Outer scroll track: 230vh on mobile / 280vh on desktop
     <div
       ref={containerRef}
-      className={`relative w-full max-w-full ${
-        reducedMotion ? 'h-[100svh]' : 'h-[230vh] md:h-[280vh]'
-      }`}
+      className="relative w-full"
+      style={{ height: reducedMotion ? '100svh' : '360vh' }}
     >
-      {/* Sticky Pinned Viewport */}
       <section
-        className="sticky top-0 h-[100svh] w-full max-w-full overflow-hidden bg-[#B9D3E6]"
-        aria-labelledby="canopy-environment-title"
         onPointerMove={handlePointerMove}
-        onPointerLeave={resetPointer}
-        onPointerCancel={resetPointer}
+        onPointerLeave={handlePointerLeave}
+        className="sticky top-0 h-[100svh] w-full overflow-hidden bg-[#B9D3E6] select-none"
+        aria-label="CANOPY Interactive Garden Environment"
       >
-        <h1 id="canopy-environment-title" className="sr-only">
-          CANOPY living environment
-        </h1>
-
         {/* =========================================================================
-            LAYER 1: MOUNTAINS & SKY BACKPLATE
+            LAYER 1: SKY & ATMOSPHERE BACKPLATE
             ========================================================================= */}
         {/* Mobile Viewport */}
-        <motion.div
-          className="absolute inset-0 z-0 h-full w-full block md:hidden"
-          style={reducedMotion ? {} : { scale: mountainScale }}
-        >
+        <div className="absolute inset-0 z-0 h-full w-full block md:hidden pointer-events-none">
           <EnvironmentLayer
             src={canopyAssets.skyAtmosphereMobile.src}
-            alt=""
+            alt="CANOPY Sky and Atmosphere"
             pointerX={pointerX}
             pointerY={pointerY}
-            parallaxStrength={mountainParallax}
+            parallaxStrength={0}
             sizes="100vw"
             priority
-            objectPosition="center center"
+            objectPosition="center top"
             imageClassName="scale-105 object-cover"
           />
-        </motion.div>
+        </div>
         {/* Desktop Viewport */}
+        <div className="absolute inset-0 z-0 h-full w-full hidden md:block pointer-events-none">
+          <EnvironmentLayer
+            src={canopyAssets.skyAtmosphere.src}
+            alt="CANOPY Sky and Atmosphere"
+            pointerX={pointerX}
+            pointerY={pointerY}
+            parallaxStrength={0}
+            sizes="100vw"
+            priority
+            objectPosition="center top"
+            imageClassName="scale-105 object-cover"
+          />
+        </div>
+
+        {/* =========================================================================
+            LAYER 1.5: MOUNTAIN RANGE
+            ========================================================================= */}
         <motion.div
-          className="absolute inset-0 z-0 h-full w-full hidden md:block"
+          className="absolute inset-0 z-5 h-full w-full pointer-events-none"
           style={reducedMotion ? {} : { scale: mountainScale }}
         >
           <EnvironmentLayer
             src={canopyAssets.mountainRange.src}
-            alt=""
+            alt="Distant Mountains"
             pointerX={pointerX}
             pointerY={pointerY}
             parallaxStrength={mountainParallax}
@@ -201,11 +211,11 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 2: ROLLING HILLS (Middle-Distance)
+            LAYER 2: ROLLING HILLS (Midground)
             ========================================================================= */}
         {/* Mobile Viewport */}
         <motion.div
-          className="absolute inset-0 z-10 h-full w-full block md:hidden"
+          className="absolute inset-0 z-10 h-full w-full block md:hidden pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -222,13 +232,13 @@ export function CanopyEnvironment() {
             pointerY={pointerY}
             parallaxStrength={hillsParallax}
             sizes="100vw"
-            objectPosition="center center"
+            objectPosition="center bottom"
             imageClassName="scale-105 object-cover"
           />
         </motion.div>
         {/* Desktop Viewport */}
         <motion.div
-          className="absolute inset-0 z-10 h-full w-full hidden md:block"
+          className="absolute inset-0 z-10 h-full w-full hidden md:block pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -255,7 +265,7 @@ export function CanopyEnvironment() {
             ========================================================================= */}
         {/* Mobile Viewport */}
         <motion.div
-          className="absolute inset-0 z-20 h-full w-full block md:hidden"
+          className="absolute inset-0 z-20 h-full w-full block md:hidden pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -278,7 +288,7 @@ export function CanopyEnvironment() {
         </motion.div>
         {/* Desktop Viewport */}
         <motion.div
-          className="absolute inset-0 z-20 h-full w-full hidden md:block"
+          className="absolute inset-0 z-20 h-full w-full hidden md:block pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -302,9 +312,6 @@ export function CanopyEnvironment() {
 
         {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE
-            - Mobile: Full-height object-cover anchored left-bottom so canopy reaches
-              the top ceiling and roots descend completely into the bottom meadow.
-            - Desktop (md:): Preserves exact approved desktop framing.
             ========================================================================= */}
         <motion.div
           className="absolute inset-0 z-30 h-full w-full pointer-events-none md:inset-auto md:left-0 md:top-0 md:h-full md:w-[min(70vw,1100px)]"
@@ -327,15 +334,15 @@ export function CanopyEnvironment() {
             sizes="100vw"
             priority
             objectPosition="left bottom md:left top"
-            imageClassName="scale-105 object-cover md:object-contain md:object-left-top"
+            imageClassName="scale-105 object-cover md:object-contain md:object-left-top pointer-events-none"
           />
         </motion.div>
 
         {/* =========================================================================
-            LAYER 5: FOREGROUND BUSHES
+            LAYER 5: FOREGROUND BUSHES (pointer-events-none prevents blocking clicks)
             ========================================================================= */}
         <motion.div
-          className="absolute inset-0 z-40 h-full w-full"
+          className="absolute inset-0 z-40 h-full w-full pointer-events-none"
           style={
             reducedMotion
               ? {}
@@ -353,9 +360,16 @@ export function CanopyEnvironment() {
             parallaxStrength={bushesParallax}
             sizes="100vw"
             objectPosition="center bottom"
-            imageClassName="scale-105 object-cover"
+            imageClassName="scale-105 object-cover pointer-events-none"
           />
         </motion.div>
+
+        {/* =========================================================================
+            LAYER 6: BUTTERFLY INTERACTION (Elevated above all landscape layers)
+            ========================================================================= */}
+        {mode === 'explore' && (
+          <ButterflyInteraction isAssembled={isGardenAssembled} />
+        )}
 
         {/* Atmospheric Overlays */}
         <EnvironmentAtmosphere />
@@ -367,16 +381,16 @@ export function CanopyEnvironment() {
           reducedMotion={reducedMotion}
         />
 
-        {/* Stage D: Opening Invitation (Pauses 1s after garden assembly) */}
+        {/* Stage D: Opening Invitation (pointer-events-none container prevents click blocking) */}
         <AnimatePresence>
-          {showInvitation && (
+          {showInvitation && mode === 'idle' && (
             <motion.div
               key="canopy-invitation-stage"
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -14 }}
               transition={{ duration: 0.65, ease: [0.25, 1, 0.5, 1] }}
-              className="pointer-events-auto absolute inset-0 z-[60] flex items-center justify-center p-3 sm:p-6"
+              className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center p-3 sm:p-6"
             >
               <ModeInvitation />
             </motion.div>

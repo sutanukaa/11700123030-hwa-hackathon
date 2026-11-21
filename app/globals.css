@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+:root {
+  --font-fredoka: 'Fredoka', sans-serif;
+  --font-dm-sans: 'DM Sans', sans-serif;
+
+  --color-canvas: #FFF8EF;
+  --color-soft-white: #FFFEFA;
+  --color-cocoa-ink: #51443E;
+  --color-muted-text: #897C72;
+  --color-petal-pink: #F2C5D2;
+  --color-garden-sage: #B8CBB0;
+  --color-butter-yellow: #F5D98E;
+  --color-powder-blue: #C5D9E8;
+  --color-terracotta: #C9795C;
+  --color-lilac: #D8C9E8;
+  --color-olive: #777D54;
+  --color-border: #E8DED2;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-cocoa-ink);
+  font-family: var(--font-dm-sans);
+}

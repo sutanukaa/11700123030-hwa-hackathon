@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme {
+  --font-fredoka: var(--font-fredoka);
+  --font-dm-sans: var(--font-dm-sans);
+}
+
 :root {
   --font-fredoka: 'Fredoka', sans-serif;
   --font-dm-sans: 'DM Sans', sans-serif;
@@ -32,6 +37,26 @@ body {
   font-family: var(--font-dm-sans);
 }
 
+/* ==========================================================================
+   CUSTOM PAW CURSOR
+   Hides the default system arrow on desktop mouse devices so the 
+   animated paw print takes over, while preserving normal touch on mobile.
+   ========================================================================== */
+@media (pointer: fine) {
+  html,
+  body,
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  .cursor-pointer {
+    cursor: none !important;
+  }
+}
+
+/* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

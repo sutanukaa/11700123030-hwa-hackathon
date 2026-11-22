@@ -7,6 +7,7 @@ export type AssetCategory =
   | 'sky'
   | 'bush'
   | 'environment'
+  | 'dog'
   | 'other'
 
 export interface AssetEntry {
@@ -18,6 +19,47 @@ export interface AssetEntry {
 }
 
 export const canopyAssets: Record<string, AssetEntry> = {
+  // Dog Story Assets (Verified in public/)
+  dogPeek: {
+    src: '/dog-peek.png',
+    alt: 'Golden-cream puppy peeking curiously into the scene',
+    category: 'dog',
+    transparentBackground: true,
+  },
+  dogCloseup: {
+    src: '/dog-closeup.png',
+    alt: 'Golden-cream puppy close-up face with blue floral bandana',
+    category: 'dog',
+    transparentBackground: true,
+  },
+  dogSit: {
+    src: '/dog-sit.png',
+    alt: 'Golden-cream puppy sitting politely on a soft pedestal',
+    category: 'dog',
+    transparentBackground: true,
+  },
+  dogPlayful: {
+    src: '/dog-happy.png',
+    alt: 'Golden-cream puppy in a cheerful playful bow with blue floral bandana',
+    category: 'dog',
+    transparentBackground: true,
+  },
+  dogHappy: {
+    src: '/dog-happy.png',
+    alt: 'Golden-cream puppy in a cheerful playful bow with blue floral bandana',
+    category: 'dog',
+    transparentBackground: true,
+  },
+
+  // Sleeping Bunny (Unwind Mode)
+  sleepingBunny: {
+    src: '/sleeping-bunny.png',
+    alt: 'Sleeping bunny resting quietly in the meadow grass',
+    category: 'environment',
+    transparentBackground: true,
+  },
+
+  // Explore Wildlife & Flora
   ladybugIdle: {
     src: '/ladybug-idle.png',
     alt: 'Ladybug resting naturally on meadow leaf',
@@ -129,93 +171,60 @@ export const canopyAssets: Record<string, AssetEntry> = {
   },
   flowerPetal: {
     src: '/flower-petal.png',
-    alt: 'Flower petal illustration',
+    alt: 'Single flower petal for wind effects',
     category: 'flower',
     transparentBackground: true,
   },
   foregroundBushes: {
     src: '/foreground-bushes.png',
-    alt: 'Foreground bushes illustration',
+    alt: 'Foreground bushes framing the view',
     category: 'bush',
     transparentBackground: true,
-    notes: 'Transparent foreground framing with planting on both edges',
-  },
-  image: {
-    src: '/image.png',
-    alt: 'Complete CANOPY scene with a butterfly and dog burrow',
-    category: 'environment',
-    transparentBackground: false,
-    notes: 'Complete scene reference; not a separable environment layer',
-  },
-  masterEnvironment: {
-    src: '/master-environment.png',
-    alt: 'Master environment scene',
-    category: 'environment',
-    transparentBackground: false,
-    notes: 'Complete 16:9 composition used as the visual reference',
+    notes: 'Botanical framing with transparent center',
   },
   meadowGround: {
     src: '/meadow-ground.png',
-    alt: 'Meadow ground illustration',
+    alt: 'Lush green meadow ground with flowers and stones',
     category: 'ground',
     transparentBackground: true,
-    notes: 'Transparent meadow and foreground flower cutout',
-  },
-  meadowGroundMobile: {
-    src: '/meadow-ground-mobile.png',
-    alt: 'Meadow ground mobile illustration',
-    category: 'ground',
-    transparentBackground: true,
-    notes: 'Portrait-oriented mobile meadow cutout',
   },
   mountainRange: {
     src: '/mountain-range.png',
-    alt: 'Mountain range and sky panorama',
+    alt: 'Soft layered mountains in the distance',
     category: 'mountain',
-    transparentBackground: false,
-    notes: 'Opaque panorama with baked sky, clouds, mountains, and distant greenery',
+    transparentBackground: true,
   },
   rollingHills: {
     src: '/rolling-hills.png',
-    alt: 'Rolling hills illustration',
+    alt: 'Rolling green hills under a soft sky',
     category: 'mountain',
     transparentBackground: true,
-    notes: 'Transparent middle-distance hill cutout',
-  },
-  rollingHillsMobile: {
-    src: '/rolling-hills-mobile.png',
-    alt: 'Rolling hills mobile illustration',
-    category: 'mountain',
-    transparentBackground: false,
-    notes: 'Portrait-oriented mobile hills and atmosphere',
   },
   skyAtmosphere: {
     src: '/sky-atmosphere.png',
-    alt: 'Complete sunlit CANOPY landscape',
-    category: 'environment',
-    transparentBackground: false,
-    notes: 'Complete scene with a tree and meadow; byte-identical to unwind-environment.png',
-  },
-  skyAtmosphereMobile: {
-    src: '/sky-atmosphere-mobile.png',
-    alt: 'Sky and atmosphere mobile illustration',
+    alt: 'Gentle sky gradient with soft clouds',
     category: 'sky',
     transparentBackground: false,
-    notes: 'Portrait-oriented mobile sky and mountain backplate',
+    notes: 'Base sky layer for the entire scene',
+  },
+  awakeCloud: {
+    src: '/awake-cloud.png',
+    alt: 'Awake cloud illustration',
+    category: 'environment',
+    transparentBackground: true,
+  },
+  masterEnvironment: {
+    src: '/master-environment.png',
+    alt: 'Full reference landscape showing all layers composed together',
+    category: 'environment',
+    transparentBackground: false,
+    notes: 'Reference composition for layout and positioning',
   },
   unwindEnvironment: {
     src: '/unwind-environment.png',
-    alt: 'Complete unwind CANOPY landscape',
+    alt: 'Unwind reference environment showing peaceful sunset mood',
     category: 'environment',
     transparentBackground: false,
-    notes: 'Complete scene reserved for a later milestone; byte-identical to sky-atmosphere.png',
+    notes: 'Reference composition for Unwind mode',
   },
-} as const
-
-export const getAsset = (key: string): AssetEntry | undefined => {
-  return canopyAssets[key as keyof typeof canopyAssets]
-}
-
-export const getAssetsByCategory = (category: AssetCategory): AssetEntry[] => {
-  return Object.values(canopyAssets).filter((asset) => asset.category === category)
 }

@@ -158,11 +158,12 @@ export function CanopyEnvironment() {
       ref={containerRef}
       className="relative h-[480vh] w-full bg-[#1b2b23]"
     >
+      {/* Fixed viewport ensures the live assembled garden remains visible under DogReveal during Stages A, B, and C */}
       <section
         aria-label="CANOPY Interactive Landscape"
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
-        className="sticky top-0 h-screen w-full overflow-hidden select-none bg-[#7cb8d0]"
+        className="fixed inset-0 h-screen w-full overflow-hidden select-none bg-[#7cb8d0] z-0"
       >
         {/* =========================================================================
             LAYER 1: SKY & MOUNTAIN RANGE (Permanent panoramic backdrop)

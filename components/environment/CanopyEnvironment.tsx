@@ -71,6 +71,11 @@ export function CanopyEnvironment() {
       return
     }
 
+    // Reset mode to idle if starting at the top of the page
+    if (scrollYProgress.get() < 0.84 && useCanopyStore.getState().mode !== 'idle') {
+      setMode('idle')
+    }
+
     let timer: NodeJS.Timeout | null = null
 
     const unsubscribe = scrollYProgress.on('change', (latest) => {
@@ -84,7 +89,7 @@ export function CanopyEnvironment() {
           }, 1000)
         }
       } else {
-        // Scrolled back up: teardown assembly and EXIT explore/unwind mode to 'idle'
+        // Scrolled back up: teardown assembly and unmount active characters
         setIsGardenAssembled(false)
         if (timer) {
           clearTimeout(timer)
@@ -92,11 +97,8 @@ export function CanopyEnvironment() {
         }
         setShowInvitation(false)
 
-        // Automatically exit active modes so interactions unmount and user can re-choose
-        if (
-          hasReachedGardenRef.current &&
-          useCanopyStore.getState().mode !== 'idle'
-        ) {
+        // Automatically exit active mode so interactions do not float in the sky
+        if (useCanopyStore.getState().mode !== 'idle') {
           setMode('idle')
         }
         hasReachedGardenRef.current = false
@@ -241,18 +243,26 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 3.2: EXPLORE INTERACTIONS (Mounts ONLY in Explore mode)
+            LAYER 3.2: EXPLORE INTERACTIONS (Mounts ONLY in Explore mode when assembled)
             ========================================================================= */}
-        {mode === 'explore' && <FlowerInteraction />}
-        {mode === 'explore' && <DandelionInteraction />}
-        {mode === 'explore' && <BunnyInteraction />}
-        {mode === 'explore' && <LadybugInteraction />}
+        {mode === 'explore' && isGardenAssembled && (
+          <>
+            <FlowerInteraction />
+            <DandelionInteraction />
+            <BunnyInteraction />
+            <LadybugInteraction />
+          </>
+        )}
 
         {/* =========================================================================
-            LAYER 3.3: UNWIND SANCTUARY (Mounts ONLY in Unwind mode)
+            LAYER 3.3: UNWIND SANCTUARY (Mounts ONLY in Unwind mode when assembled)
             ========================================================================= */}
-        {mode === 'unwind' && <SleepingBunny />}
-        {mode === 'unwind' && <UnwindBreeze />}
+        {mode === 'unwind' && isGardenAssembled && (
+          <>
+            <SleepingBunny />
+            <UnwindBreeze />
+          </>
+        )}
 
         {/* =========================================================================
             LAYER 4: CHERRY BLOSSOM TREE
@@ -309,24 +319,26 @@ export function CanopyEnvironment() {
         </motion.div>
 
         {/* =========================================================================
-            LAYER 6: BUTTERFLY INTERACTION (Explore Only)
+            LAYER 6: BUTTERFLY INTERACTION (Explore Only when assembled)
             ========================================================================= */}
-        {mode === 'explore' && <ButterflyInteraction isAssembled={true} />}
+        {mode === 'explore' && isGardenAssembled && (
+          <ButterflyInteraction isAssembled={true} />
+        )}
 
-        {/* Optional Mindful Breathing Guide (Unwind Only) */}
-        {mode === 'unwind' && <BreathingGuide />}
+        {/* Optional Mindful Breathing Guide (Unwind Only when assembled) */}
+        {mode === 'unwind' && isGardenAssembled && <BreathingGuide />}
 
         {/* Atmospheric Overlays */}
         <EnvironmentAtmosphere />
         <EnvironmentLighting />
 
-        {/* Scroll Cue */}
+        {/* Scroll Cue (Only prompts before entering the garden) */}
         <ScrollCue
           scrollYProgress={scrollYProgress}
           reducedMotion={reducedMotion}
         />
 
-        {/* Stage D: Opening Invitation (Shows when assembled & mode is idle) */}
+        {/* Opening Invitation (Shows once garden is assembled & mode is idle) */}
         <AnimatePresence>
           {showInvitation && mode === 'idle' && (
             <motion.div
@@ -342,14 +354,14 @@ export function CanopyEnvironment() {
           )}
         </AnimatePresence>
 
-        {/* Ambient Garden Audio (Crossfades Explore and Unwind soundscapes) */}
+        {/* Ambient Garden Audio */}
         <GardenAudio />
 
-        {/* Exploration Prompt Banner (Explore Only) */}
-        <ExploreBanner />
+        {/* Exploration Prompt Banner (Only when assembled in Explore mode) */}
+        {mode === 'explore' && isGardenAssembled && <ExploreBanner />}
 
         {/* Persistent Mode Switcher */}
-        <ModeSwitcher />
+        {isGardenAssembled && <ModeSwitcher />}
       </section>
     </div>
   )

@@ -3,9 +3,15 @@
   "instructions": [
     ".hwa/rules.md"
   ],
-  "enabled_providers": [
-    "opencode",
-    "nvidia"
+  "disabled_providers": [
+    "anthropic",
+    "openai",
+    "google",
+    "google-vertex",
+    "google-vertex-anthropic",
+    "xai",
+    "github-copilot",
+    "azure"
   ],
   "provider": {
     "opencode": {

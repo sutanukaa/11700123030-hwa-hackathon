@@ -1,6 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
   AlertCircle,
   ArrowRight,
@@ -67,6 +68,7 @@ function CanopyPaw() {
 }
 
 export function SignInModal() {
+  const router = useRouter()
   const isOpen = useAuthStore((state) => state.isSignInOpen)
   const user = useAuthStore((state) => state.user)
   const authError = useAuthStore((state) => state.authError)
@@ -202,6 +204,14 @@ export function SignInModal() {
           : 'Welcome back to CANOPY.',
       )
       handleClose()
+
+      if (typeof window !== 'undefined') {
+        const redirectTarget = localStorage.getItem('canopy-auth-redirect')
+        if (redirectTarget) {
+          localStorage.removeItem('canopy-auth-redirect')
+          router.push(redirectTarget)
+        }
+      }
     } catch (error) {
       setAuthError(
         error instanceof Error
@@ -249,291 +259,241 @@ export function SignInModal() {
           >
             <motion.div
               ref={dialogRef}
+              tabIndex={-1}
               role="dialog"
               aria-modal="true"
-              aria-labelledby="canopy-sign-in-title"
-              tabIndex={-1}
-              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.96 }}
-              animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.97 }}
+              aria-labelledby="canopy-auth-title"
+              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 10 }}
               transition={panelTransition}
-              className="relative my-auto w-full max-w-[470px] overflow-hidden rounded-[28px] border border-white/90 bg-[#FFF8EF] shadow-[0_28px_90px_rgba(43,67,76,0.28)] outline-none sm:rounded-[34px]"
+              className="relative w-full max-w-[460px] overflow-hidden rounded-[30px] border border-[#F3E3D3] bg-[#FFF9F2] p-6 shadow-[0_24px_64px_rgba(42,34,30,0.18)] outline-none sm:p-8"
+              onMouseDown={(event) => event.stopPropagation()}
             >
-              <div className="pointer-events-none absolute -right-14 -top-16 h-44 w-44 rounded-full bg-[#C5D9E8]/55 blur-2xl" />
-              <div className="pointer-events-none absolute -bottom-16 -left-12 h-40 w-40 rounded-full bg-[#F5D98E]/25 blur-2xl" />
-
               <button
                 type="button"
                 onClick={handleClose}
-                aria-label="Close sign in"
-                className="absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-[#E8DED2] bg-[#FFFEFA]/90 text-[#6B5E55] shadow-sm transition hover:border-[#82C2E5]/60 hover:text-[#3399D4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/50 cursor-pointer"
+                aria-label="Close sign in dialog"
+                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-[#6B5A51] transition hover:bg-white hover:text-[#3C312C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#82C2E5]"
               >
-                <X className="h-4 w-4 stroke-[2.4]" />
+                <X className="h-4 w-4" />
               </button>
 
-              <div className="relative px-6 pb-6 pt-7 sm:px-8 sm:pb-8 sm:pt-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#3399D4] text-white shadow-[0_8px_20px_rgba(51,153,212,0.28)]">
+              <div className="flex items-center gap-3 text-[#82C2E5]">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF5FC] text-[#3399D4]">
                   <CanopyPaw />
                 </div>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#8C7669] [font-family:var(--font-fredoka)]">
+                    CANOPY MEMBERSHIP
+                  </p>
+                  <h2
+                    id="canopy-auth-title"
+                    className="text-2xl font-bold tracking-tight text-[#4A3D36] [font-family:var(--font-fredoka)] sm:text-3xl"
+                  >
+                    {user
+                      ? 'Your Account'
+                      : authMode === 'signin'
+                        ? 'Welcome back'
+                        : 'Join the garden'}
+                  </h2>
+                </div>
+              </div>
 
-                {user ? (
-                  <div className="mt-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3399D4] [font-family:var(--font-fredoka)]">
-                      CANOPY ACCOUNT
+              {user ? (
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-2xl border border-[#F0DFCF] bg-white/80 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[#9C8578]">
+                      Signed in as
                     </p>
-                    <h2
-                      id="canopy-sign-in-title"
-                      className="mt-2 text-3xl font-extrabold leading-tight text-[#4A3E39] [font-family:var(--font-fredoka)]"
-                    >
-                      You&apos;re signed in
-                    </h2>
-                    <p className="mt-2 text-sm leading-relaxed text-[#6B5E55]">
-                      Welcome back, {user.name}. Your little world is ready when you are.
+                    <p className="mt-1 text-base font-bold text-[#4A3D36] [font-family:var(--font-fredoka)]">
+                      {user.name}
                     </p>
+                    <p className="text-xs text-[#7A675D]">{user.email}</p>
+                    <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#EAF5FC] px-2.5 py-0.5 text-[11px] font-semibold text-[#3399D4]">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Connected via {user.provider === 'google' ? 'Google' : 'Email'}
+                    </span>
+                  </div>
 
-                    <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[#D8E7EF] bg-white/75 p-4">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#C5D9E8] text-lg font-bold text-[#2A86BC] [font-family:var(--font-fredoka)]">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-[#51443E]">
-                          {user.name}
-                        </p>
-                        <p className="truncate text-xs text-[#897C72]">{user.email}</p>
-                      </div>
-                      <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#3399D4]" />
-                    </div>
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    disabled={isSigningOut}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-[#E9D3C2] bg-white px-4 py-3 text-sm font-bold text-[#6B5A51] transition hover:border-[#DF8A7E] hover:bg-[#FFF5F4] hover:text-[#C74A3D] disabled:opacity-60 [font-family:var(--font-fredoka)]"
+                  >
+                    {isSigningOut ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Signing out...
+                      </>
+                    ) : (
+                      'Sign out of CANOPY'
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="mt-2 text-xs leading-relaxed text-[#7A675D] sm:text-sm">
+                    {authMode === 'signin'
+                      ? 'Sign in to access your orders, saved dogs and spaces.'
+                      : 'Create your account to save your favourite CANOPY configurations.'}
+                  </p>
 
+                  <div className="mt-5 grid grid-cols-2 rounded-2xl bg-[#F4E6D8]/70 p-1">
                     <button
                       type="button"
-                      onClick={handleClose}
-                      className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3399D4] px-6 py-3.5 text-base font-bold text-white shadow-[0_8px_24px_rgba(51,153,212,0.32)] transition hover:bg-[#2A86BC] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8EF] cursor-pointer"
+                      onClick={() => switchAuthMode('signin')}
+                      className={`rounded-xl py-2 text-xs font-bold transition sm:text-sm [font-family:var(--font-fredoka)] ${
+                        authMode === 'signin'
+                          ? 'bg-white text-[#4A3D36] shadow-xs'
+                          : 'text-[#8A7569] hover:text-[#4A3D36]'
+                      }`}
                     >
-                      Continue shopping
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                      Sign In
                     </button>
-
                     <button
                       type="button"
-                      onClick={handleSignOut}
-                      disabled={isSigningOut}
-                      className="mt-3 w-full rounded-full px-5 py-2.5 text-sm font-bold text-[#6B5E55] transition hover:bg-white/70 hover:text-[#3399D4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/40 disabled:opacity-60 cursor-pointer"
+                      onClick={() => switchAuthMode('register')}
+                      className={`rounded-xl py-2 text-xs font-bold transition sm:text-sm [font-family:var(--font-fredoka)] ${
+                        authMode === 'register'
+                          ? 'bg-white text-[#4A3D36] shadow-xs'
+                          : 'text-[#8A7569] hover:text-[#4A3D36]'
+                      }`}
                     >
-                      {isSigningOut ? 'Signing out…' : 'Sign out'}
+                      Create Account
                     </button>
                   </div>
-                ) : (
-                  <>
-                    <div className="mt-5 pr-10">
-                      <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#3399D4] [font-family:var(--font-fredoka)]">
-                        WELCOME TO CANOPY
-                      </p>
-                      <h2
-                        id="canopy-sign-in-title"
-                        className="mt-2 text-[30px] font-extrabold leading-tight text-[#4A3E39] [font-family:var(--font-fredoka)] sm:text-[34px]"
-                      >
-                        {authMode === 'signin'
-                          ? 'Come back to their little world'
-                          : 'Create their cosy corner'}
-                      </h2>
-                      <p className="mt-2 text-sm leading-relaxed text-[#6B5E55]">
-                        Sign in for orders, updates and more happy little adventures.
-                      </p>
-                    </div>
 
-                    <div
-                      className="mt-5 grid grid-cols-2 rounded-full border border-[#E8DED2] bg-[#F3E9DC] p-1"
-                      role="group"
-                      aria-label="Choose account action"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => switchAuthMode('signin')}
-                        aria-pressed={authMode === 'signin'}
-                        className={`rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/40 cursor-pointer ${
-                          authMode === 'signin'
-                            ? 'bg-white text-[#3399D4] shadow-sm'
-                            : 'text-[#897C72] hover:text-[#51443E]'
-                        }`}
-                      >
-                        Sign in
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => switchAuthMode('register')}
-                        aria-pressed={authMode === 'register'}
-                        className={`rounded-full px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/40 cursor-pointer ${
-                          authMode === 'register'
-                            ? 'bg-white text-[#3399D4] shadow-sm'
-                            : 'text-[#897C72] hover:text-[#51443E]'
-                        }`}
-                      >
-                        Create account
-                      </button>
-                    </div>
-
+                  <div className="mt-5">
                     <button
                       type="button"
                       onClick={handleGoogleSignIn}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-3 rounded-full border border-[#DED4C8] bg-[#FFFEFA] px-5 py-3 text-sm font-bold text-[#51443E] shadow-sm transition hover:-translate-y-0.5 hover:border-[#82C2E5]/60 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/40 cursor-pointer"
+                      className="flex w-full items-center justify-center gap-3 rounded-2xl border border-[#EAD7C7] bg-white px-4 py-3 text-sm font-bold text-[#4A3D36] shadow-xs transition hover:border-[#82C2E5] hover:bg-[#F8FCFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#82C2E5] [font-family:var(--font-fredoka)] cursor-pointer"
                     >
                       <GoogleMark />
-                      <span>Continue with Google</span>
+                      Continue with Google
                     </button>
+                  </div>
 
-                    <div className="my-5 flex items-center gap-3" aria-hidden="true">
-                      <span className="h-px flex-1 bg-[#E8DED2]" />
-                      <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#A09288] [font-family:var(--font-fredoka)]">
-                        or use email
-                      </span>
-                      <span className="h-px flex-1 bg-[#E8DED2]" />
+                  <div className="my-5 flex items-center gap-3 text-xs text-[#A69183]">
+                    <div className="h-px flex-1 bg-[#E8D6C6]" />
+                    <span>or use email</span>
+                    <div className="h-px flex-1 bg-[#E8D6C6]" />
+                  </div>
+
+                  {authError && (
+                    <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-[#F3C4BE] bg-[#FFF2F0] p-3 text-xs text-[#B43C30]">
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-[#D94F41]" />
+                      <p className="leading-relaxed">{authError}</p>
                     </div>
+                  )}
 
-                    <form onSubmit={onSubmit} noValidate>
-                      <div className="space-y-4">
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[#6B5E55] [font-family:var(--font-fredoka)]">
-                            Email address
-                          </span>
-                          <span className="relative block">
-                            <Mail className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#82AEBB]" />
-                            <input
-                              type="email"
-                              autoComplete="email"
-                              autoCapitalize="none"
-                              spellCheck={false}
-                              placeholder="you@example.com"
-                              {...register('email')}
-                              className={`h-12 w-full rounded-2xl border bg-[#FFFEFA] pl-11 pr-4 text-sm text-[#51443E] outline-none transition placeholder:text-[#B4A89E] focus:border-[#3399D4] focus:ring-4 focus:ring-[#82C2E5]/20 ${
-                                errors.email
-                                  ? 'border-[#C9795C]'
-                                  : 'border-[#E4D9CD] hover:border-[#C5D9E8]'
-                              }`}
-                            />
-                          </span>
-                          {errors.email && (
-                            <span className="mt-1.5 block text-xs font-semibold text-[#B85F45]">
-                              {errors.email.message}
-                            </span>
-                          )}
-                        </label>
-
-                        <label className="block">
-                          <span className="mb-1.5 block text-xs font-bold uppercase tracking-[0.12em] text-[#6B5E55] [font-family:var(--font-fredoka)]">
-                            Password
-                          </span>
-                          <span className="relative block">
-                            <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#82AEBB]" />
-                            <input
-                              type={showPassword ? 'text' : 'password'}
-                              autoComplete={
-                                authMode === 'register' ? 'new-password' : 'current-password'
-                              }
-                              placeholder="At least 8 characters"
-                              {...register('password')}
-                              className={`h-12 w-full rounded-2xl border bg-[#FFFEFA] pl-11 pr-12 text-sm text-[#51443E] outline-none transition placeholder:text-[#B4A89E] focus:border-[#3399D4] focus:ring-4 focus:ring-[#82C2E5]/20 ${
-                                errors.password
-                                  ? 'border-[#C9795C]'
-                                  : 'border-[#E4D9CD] hover:border-[#C5D9E8]'
-                              }`}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword((visible) => !visible)}
-                              aria-label={showPassword ? 'Hide password' : 'Show password'}
-                              className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-[#897C72] transition hover:bg-[#EAF3F7] hover:text-[#3399D4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/40 cursor-pointer"
-                            >
-                              {showPassword ? (
-                                <EyeOff className="h-[17px] w-[17px]" />
-                              ) : (
-                                <Eye className="h-[17px] w-[17px]" />
-                              )}
-                            </button>
-                          </span>
-                          {errors.password && (
-                            <span className="mt-1.5 block text-xs font-semibold text-[#B85F45]">
-                              {errors.password.message}
-                            </span>
-                          )}
-                        </label>
+                  <form onSubmit={onSubmit} className="space-y-3.5">
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#8A7569]">
+                        Email address
+                      </label>
+                      <div className="relative mt-1">
+                        <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A89487]" />
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          {...register('email')}
+                          placeholder="doglover@canopy.garden"
+                          className="w-full rounded-2xl border border-[#EAD7C7] bg-white py-2.5 pl-10 pr-4 text-sm text-[#4A3D36] placeholder-[#BAA79A] shadow-xs outline-none transition focus:border-[#82C2E5] focus:ring-2 focus:ring-[#82C2E5]/25"
+                        />
                       </div>
-
-                      {authError && (
-                        <div
-                          role="alert"
-                          className="mt-4 flex items-start gap-2.5 rounded-2xl border border-[#E7B8A8] bg-[#FFF0E9] px-4 py-3 text-sm leading-relaxed text-[#9F4F39]"
-                        >
-                          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                          <span>{authError}</span>
-                        </div>
+                      {errors.email && (
+                        <p className="mt-1 text-xs text-[#C74A3D]">
+                          {errors.email.message}
+                        </p>
                       )}
-
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="group mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3399D4] px-6 py-3.5 text-base font-bold text-white shadow-[0_8px_24px_rgba(51,153,212,0.32)] transition hover:-translate-y-0.5 hover:bg-[#2A86BC] hover:shadow-[0_12px_28px_rgba(51,153,212,0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3399D4]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFF8EF] disabled:cursor-wait disabled:opacity-70 cursor-pointer"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>{authMode === 'register' ? 'Creating account…' : 'Signing in…'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>{authMode === 'register' ? 'Create account' : 'Sign in with email'}</span>
-                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                          </>
-                        )}
-                      </button>
-                    </form>
-
-                    <div className="mt-4 flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-[#897C72]">
-                      <LockKeyhole className="h-3.5 w-3.5 text-[#82AEBB]" />
-                      <span>One account for orders, updates and happy little adventures.</span>
                     </div>
-                  </>
-                )}
-              </div>
+
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-[#8A7569]">
+                        Password
+                      </label>
+                      <div className="relative mt-1">
+                        <LockKeyhole className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A89487]" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete={
+                            authMode === 'register' ? 'new-password' : 'current-password'
+                          }
+                          {...register('password')}
+                          placeholder="At least 8 characters"
+                          className="w-full rounded-2xl border border-[#EAD7C7] bg-white py-2.5 pl-10 pr-10 text-sm text-[#4A3D36] placeholder-[#BAA79A] shadow-xs outline-none transition focus:border-[#82C2E5] focus:ring-2 focus:ring-[#82C2E5]/25"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((prev) => !prev)}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A89487] hover:text-[#4A3D36]"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password && (
+                        <p className="mt-1 text-xs text-[#C74A3D]">
+                          {errors.password.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#3399D4] py-3 text-sm font-bold text-white shadow-[0_8px_20px_rgba(51,153,212,0.35)] transition hover:bg-[#2884B8] disabled:opacity-60 [font-family:var(--font-fredoka)] cursor-pointer"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Please wait...
+                        </>
+                      ) : (
+                        <>
+                          <span>
+                            {authMode === 'signin' ? 'Sign in' : 'Create account'}
+                          </span>
+                          <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <AuthToast notice={notice} isOpen={isOpen} onDismiss={dismissNotice} />
+      <AnimatePresence>
+        {notice && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.96 }}
+            className="fixed bottom-5 right-5 z-[130] flex max-w-sm items-center gap-3 rounded-2xl border border-[#D5ECF8] bg-white/95 px-4 py-3 text-xs font-medium text-[#405461] shadow-[0_12px_36px_rgba(20,50,85,0.12)] backdrop-blur-xs"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-[#3399D4]" />
+            <p className="flex-1 leading-snug">{notice}</p>
+            <button
+              type="button"
+              onClick={dismissNotice}
+              aria-label="Dismiss message"
+              className="rounded-md p-1 text-[#8CA0AD] hover:bg-[#F2F8FC] hover:text-[#405461]"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
-  )
-}
-
-function AuthToast({
-  notice,
-  isOpen,
-  onDismiss,
-}: {
-  notice: string | null
-  isOpen: boolean
-  onDismiss: () => void
-}) {
-  useEffect(() => {
-    if (!notice || isOpen) return
-    const timer = window.setTimeout(onDismiss, 4200)
-    return () => window.clearTimeout(timer)
-  }, [isOpen, notice, onDismiss])
-
-  return (
-    <AnimatePresence>
-      {notice && !isOpen && (
-        <motion.div
-          role="status"
-          initial={{ opacity: 0, y: 18, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 12, scale: 0.97 }}
-          transition={{ duration: 0.25 }}
-          className="fixed bottom-5 left-1/2 z-[130] flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-2.5 rounded-full border border-white/80 bg-[#3399D4] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_32px_rgba(51,153,212,0.34)]"
-        >
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span className="text-center leading-snug">{notice}</span>
-        </motion.div>
-      )}
-    </AnimatePresence>
   )
 }

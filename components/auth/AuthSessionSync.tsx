@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/state/auth-store'
 import { useCanopyStore } from '@/state/canopy-store'
 import type { CanopyMode } from '@/state/canopy-store'
@@ -18,6 +19,7 @@ const AUTH_ERRORS: Record<string, string> = {
 }
 
 export function AuthSessionSync() {
+  const router = useRouter()
   const setUser = useAuthStore((state) => state.setUser)
   const setNotice = useAuthStore((state) => state.setNotice)
   const setAuthError = useAuthStore((state) => state.setAuthError)
@@ -38,6 +40,12 @@ export function AuthSessionSync() {
         const nextMode: CanopyMode =
           savedMode === 'explore' || savedMode === 'unwind' ? savedMode : 'explore'
         setMode(nextMode)
+
+        const redirectTarget = window.localStorage.getItem('canopy-auth-redirect')
+        if (redirectTarget) {
+          window.localStorage.removeItem('canopy-auth-redirect')
+          router.push(redirectTarget)
+        }
       }
 
       try {
@@ -83,7 +91,7 @@ export function AuthSessionSync() {
     return () => {
       isActive = false
     }
-  }, [openSignIn, setAuthError, setMode, setNotice, setUser])
+  }, [openSignIn, router, setAuthError, setMode, setNotice, setUser])
 
   return null
 }

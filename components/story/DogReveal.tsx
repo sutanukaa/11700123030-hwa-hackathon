@@ -143,6 +143,7 @@ export function DogReveal() {
 
   return (
     <section
+    id="canopy-dog-reveal"
       ref={containerRef}
       className="relative h-[450vh] w-full"
       aria-label="CANOPY brand story"

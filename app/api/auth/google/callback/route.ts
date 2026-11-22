@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import {
   createSessionToken,
+  OAUTH_REDIRECT_COOKIE,
   OAUTH_STATE_COOKIE,
   setSessionCookie,
   verifyOAuthState,
@@ -20,11 +21,13 @@ interface GoogleProfile {
   picture?: string
 }
 
-const redirectWithError = (request: NextRequest, reason: string) => {
-  const response = NextResponse.redirect(
-    new URL(`/?auth=error&reason=${reason}`, request.url),
-  )
+const redirectWithError = (request: NextRequest, reason: string, redirectTarget = '/') => {
+  const targetUrl = new URL(redirectTarget, request.url)
+  targetUrl.searchParams.set('auth', 'error')
+  targetUrl.searchParams.set('reason', reason)
+  const response = NextResponse.redirect(targetUrl)
   response.cookies.delete(OAUTH_STATE_COOKIE)
+  response.cookies.delete(OAUTH_REDIRECT_COOKIE)
   return response
 }
 
@@ -36,20 +39,31 @@ export async function GET(request: NextRequest) {
   const storedState = request.cookies.get(OAUTH_STATE_COOKIE)?.value
   const oauthError = request.nextUrl.searchParams.get('error')
 
+  // Retrieve destination redirect target from state or backup cookie
+  const cookieRedirect = request.cookies.get(OAUTH_REDIRECT_COOKIE)?.value
+  const verifiedState = verifyOAuthState(storedState)
+
+  const resolvedRedirect =
+    (verifiedState?.redirect &&
+      verifiedState.redirect.startsWith('/') &&
+      !verifiedState.redirect.startsWith('//') &&
+      verifiedState.redirect) ||
+    (cookieRedirect &&
+      cookieRedirect.startsWith('/') &&
+      !cookieRedirect.startsWith('//') &&
+      cookieRedirect) ||
+    '/'
+
   if (!clientId || !clientSecret) {
-    return redirectWithError(request, 'google_not_configured')
+    return redirectWithError(request, 'google_not_configured', resolvedRedirect)
   }
 
   if (oauthError) {
-    return redirectWithError(request, 'google_cancelled')
+    return redirectWithError(request, 'google_cancelled', resolvedRedirect)
   }
 
-  if (!code || !state || !storedState || state !== storedState) {
-    return redirectWithError(request, 'google_state_invalid')
-  }
-
-  if (!verifyOAuthState(storedState)) {
-    return redirectWithError(request, 'google_state_invalid')
+  if (!code || !state || !storedState || state !== storedState || !verifiedState) {
+    return redirectWithError(request, 'google_state_invalid', resolvedRedirect)
   }
 
   const callbackUrl = new URL('/api/auth/google/callback', request.nextUrl.origin)
@@ -69,12 +83,12 @@ export async function GET(request: NextRequest) {
   })
 
   if (!tokenResponse.ok) {
-    return redirectWithError(request, 'google_exchange_failed')
+    return redirectWithError(request, 'google_exchange_failed', resolvedRedirect)
   }
 
   const token = (await tokenResponse.json()) as GoogleTokenResponse
   if (!token.access_token) {
-    return redirectWithError(request, 'google_exchange_failed')
+    return redirectWithError(request, 'google_exchange_failed', resolvedRedirect)
   }
 
   const profileResponse = await fetch(
@@ -88,17 +102,21 @@ export async function GET(request: NextRequest) {
   )
 
   if (!profileResponse.ok) {
-    return redirectWithError(request, 'google_profile_failed')
+    return redirectWithError(request, 'google_profile_failed', resolvedRedirect)
   }
 
   const profile = (await profileResponse.json()) as GoogleProfile
   if (!profile.sub || !profile.email) {
-    return redirectWithError(request, 'google_profile_failed')
+    return redirectWithError(request, 'google_profile_failed', resolvedRedirect)
   }
 
   const email = profile.email.trim().toLowerCase()
   const name = profile.name?.trim() || email.split('@')[0]
-  const response = NextResponse.redirect(new URL('/?auth=success', request.url))
+
+  // Redirect directly to destination (e.g. /shop?auth=success)
+  const destinationUrl = new URL(resolvedRedirect, request.url)
+  destinationUrl.searchParams.set('auth', 'success')
+  const response = NextResponse.redirect(destinationUrl)
 
   setSessionCookie(
     response,
@@ -111,5 +129,6 @@ export async function GET(request: NextRequest) {
     }),
   )
   response.cookies.delete(OAUTH_STATE_COOKIE)
+  response.cookies.delete(OAUTH_REDIRECT_COOKIE)
   return response
 }

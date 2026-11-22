@@ -11,6 +11,7 @@ import type { AuthProvider, AuthUser } from '@/types/auth'
 export const SESSION_COOKIE = 'canopy_session'
 export const EMAIL_CREDENTIAL_COOKIE = 'canopy_email_credential'
 export const OAUTH_STATE_COOKIE = 'canopy_oauth_state'
+export const OAUTH_REDIRECT_COOKIE = 'canopy_auth_redirect'
 
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30
 const EMAIL_CREDENTIAL_MAX_AGE = 60 * 60 * 24 * 365
@@ -31,9 +32,10 @@ interface EmailCredentialPayload {
   exp: number
 }
 
-interface OAuthStatePayload {
+export interface OAuthStatePayload {
   nonce: string
   exp: number
+  redirect?: string
 }
 
 const getSigningKey = () => {
@@ -202,16 +204,17 @@ export const createEmailUser = (email: string): AuthUser => {
   }
 }
 
-export const createOAuthState = () =>
+export const createOAuthState = (redirect?: string) =>
   signPayload({
     nonce: randomBytes(24).toString('base64url'),
     exp: Date.now() + OAUTH_STATE_MAX_AGE * 1000,
+    ...(redirect ? { redirect } : {}),
   } satisfies OAuthStatePayload)
 
-export const verifyOAuthState = (token: string | undefined) => {
+export const verifyOAuthState = (token: string | undefined): OAuthStatePayload | null => {
   const payload = verifyPayload<OAuthStatePayload>(token)
-  if (!payload || payload.exp <= Date.now() || !payload.nonce) return false
-  return true
+  if (!payload || payload.exp <= Date.now() || !payload.nonce) return null
+  return payload
 }
 
 export const setOAuthStateCookie = (response: NextResponse, state: string) => {

@@ -223,7 +223,14 @@ export function SignInModal() {
 
   const handleGoogleSignIn = () => {
     window.localStorage.setItem('canopy-auth-return-mode', mode)
-    window.location.assign('/api/auth/google')
+    const redirectTarget =
+      typeof window !== 'undefined'
+        ? window.localStorage.getItem('canopy-auth-redirect')
+        : null
+    const targetUrl = redirectTarget
+      ? `/api/auth/google?redirect=${encodeURIComponent(redirectTarget)}`
+      : '/api/auth/google'
+    window.location.assign(targetUrl)
   }
 
   const handleSignOut = async () => {

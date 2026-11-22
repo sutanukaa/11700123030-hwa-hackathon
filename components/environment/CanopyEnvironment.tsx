@@ -47,6 +47,7 @@ const getParallaxValue = (
 
 export function CanopyEnvironment() {
   const containerRef = useRef<HTMLDivElement>(null)
+  const hasReachedGardenRef = useRef(false)
   const reducedMotion = useReducedMotion()
   const mode = useCanopyStore((state) => state.mode)
   const setMode = useCanopyStore((state) => state.setMode)
@@ -75,6 +76,7 @@ export function CanopyEnvironment() {
     const unsubscribe = scrollYProgress.on('change', (latest) => {
       // Once the garden is fully formed (at or above 84% scroll)
       if (latest >= 0.84) {
+        hasReachedGardenRef.current = true
         setIsGardenAssembled(true)
         if (!timer && !showInvitation) {
           timer = setTimeout(() => {
@@ -91,9 +93,13 @@ export function CanopyEnvironment() {
         setShowInvitation(false)
 
         // Automatically exit active modes so interactions unmount and user can re-choose
-        if (useCanopyStore.getState().mode !== 'idle') {
+        if (
+          hasReachedGardenRef.current &&
+          useCanopyStore.getState().mode !== 'idle'
+        ) {
           setMode('idle')
         }
+        hasReachedGardenRef.current = false
       }
     })
 

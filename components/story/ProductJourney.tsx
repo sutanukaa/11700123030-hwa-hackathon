@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion, useScroll, useSpring } from 'framer-motion'
+import { useAuthStore } from '@/state/auth-store'
 
 interface ProductStop {
   id: string
@@ -98,6 +99,7 @@ export function ProductJourney() {
   const sectionRef = useRef<HTMLDivElement>(null)
   const pathRef = useRef<SVGPathElement>(null)
   const reducedMotion = useReducedMotion()
+  const openSignIn = useAuthStore((state) => state.openSignIn)
 
   const [markerPos, setMarkerPos] = useState({ x: 500, y: 40 })
   const [isActiveAtStop, setIsActiveAtStop] = useState(false)
@@ -570,9 +572,8 @@ export function ProductJourney() {
             type="button"
             whileHover={{ y: -2, scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            onClick={openSignIn}
+            aria-haspopup="dialog"
             className="group relative mt-6 inline-flex items-center gap-2.5 overflow-hidden rounded-full bg-[#3399D4] px-8 py-3.5 text-base sm:text-lg font-bold text-white shadow-[0_8px_24px_rgba(51,153,212,0.35)] transition-all duration-300 hover:bg-[#2A86BC] hover:shadow-[0_12px_30px_rgba(51,153,212,0.5)] [font-family:var(--font-fredoka)] cursor-pointer"
           >
             {/* Shimmer sweep on hover */}
